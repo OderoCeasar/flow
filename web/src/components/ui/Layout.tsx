@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../lib/auth';
 import { LANGUAGES } from '../../i18n';
 import { useInstallPrompt } from '../../lib/install';
 import { IconArrowLeft, IconCheck, IconDownload, IconDrop, IconMore, IconOffline } from './Icons';
@@ -96,8 +97,10 @@ const menuItem =
 
 // The "⋯" menu: other pages, language and install. A simple disclosure (not an
 // ARIA menu), so Tab and Enter work the way people expect.
-export function MoreMenu() {
+export function MoreMenu({ variant = 'citizen' }: { variant?: 'citizen' | 'technician' }) {
   const { t, i18n } = useTranslation();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { available, install } = useInstallPrompt();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -142,11 +145,18 @@ export function MoreMenu() {
       {open && (
         <div id={id} className="absolute right-0 top-[calc(100%+4px)] z-50 w-64 rounded-xl border border-surface-line bg-surface p-2 shadow-lg">
           <nav aria-label={t('app.menu')}>
-            <ul className="flex flex-col">
-              <li><Link to="/report" className={menuItem} onClick={close}>{t('menu.report')}</Link></li>
-              <li><Link to="/track" className={menuItem} onClick={close}>{t('menu.track')}</Link></li>
-              <li><Link to="/my-reports" className={menuItem} onClick={close}>{t('menu.myReports')}</Link></li>
-            </ul>
+            {variant === 'technician' ? (
+              <ul className="flex flex-col">
+                <li><Link to="/tech" className={menuItem} onClick={close}>{t('tech.title')}</Link></li>
+                <li><Link to="/tech?done=1" className={menuItem} onClick={close}>{t('tech.finishedJobs')}</Link></li>
+              </ul>
+            ) : (
+              <ul className="flex flex-col">
+                <li><Link to="/report" className={menuItem} onClick={close}>{t('menu.report')}</Link></li>
+                <li><Link to="/track" className={menuItem} onClick={close}>{t('menu.track')}</Link></li>
+                <li><Link to="/my-reports" className={menuItem} onClick={close}>{t('menu.myReports')}</Link></li>
+              </ul>
+            )}
           </nav>
           <div role="group" aria-labelledby={`${id}-lang`} className="mt-1 border-t border-surface-line pt-2">
             <p id={`${id}-lang`} className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">{t('app.language')}</p>
@@ -168,7 +178,13 @@ export function MoreMenu() {
                 {t('app.installApp')}
               </button>
             )}
-            <Link to="/staff/login" className={`${menuItem} text-sm text-ink-muted`} onClick={close}>{t('menu.staff')}</Link>
+            {variant === 'technician' ? (
+              <button type="button" className={menuItem} onClick={async () => { close(); await signOut(); navigate('/staff/login'); }}>
+                {t('app.signOut')}
+              </button>
+            ) : (
+              <Link to="/staff/login" className={`${menuItem} text-sm text-ink-muted`} onClick={close}>{t('menu.staff')}</Link>
+            )}
           </div>
         </div>
       )}
@@ -186,7 +202,11 @@ export function CitizenShell({
   children,
   bottom,
   padded = true,
+  menu = 'citizen',
+  homeTo = '/',
 }: {
+  menu?: 'citizen' | 'technician';
+  homeTo?: string;
   title?: string;
   back?: { to: string; label: string } | { onClick: () => void; label: string };
   children: ReactNode;
@@ -217,7 +237,7 @@ export function CitizenShell({
                 </button>
               )
             ) : (
-              <Link to="/" className="flex min-h-touch items-center gap-2.5 rounded text-xl font-bold text-brand-700 focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus" aria-label={t('app.home')}>
+              <Link to={homeTo} className="flex min-h-touch items-center gap-2.5 rounded text-xl font-bold text-brand-700 focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus" aria-label={t('app.home')}>
                 <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brand-600 text-white">
                   <IconDrop size={20} />
                 </span>
@@ -225,7 +245,7 @@ export function CitizenShell({
               </Link>
             )}
             {title ? <h1 className="truncate text-center text-base font-semibold text-ink">{title}</h1> : <span />}
-            <MoreMenu />
+            <MoreMenu variant={menu} />
           </div>
         </header>
         <main id="main" className={`flex flex-1 flex-col sm:overflow-y-auto ${padded ? 'gap-5 px-5 py-6' : ''}`}>

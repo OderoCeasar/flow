@@ -76,6 +76,8 @@ func (server *Server) setupRouter() {
 	// Field technicians.
 	tech := v1.Group("/tech", server.requireRoles("technician"))
 	tech.GET("/jobs", server.listJobs)
+	tech.GET("/jobs/:id", server.getJob)
+	tech.POST("/jobs/:id/follow-up", server.jobFollowUp)
 	tech.PATCH("/jobs/:id/status", server.updateJobStatus)
 	tech.POST("/jobs/:id/photos", server.uploadJobPhoto)
 

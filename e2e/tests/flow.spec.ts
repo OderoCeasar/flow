@@ -101,13 +101,20 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
 
     const job = page.locator('li', { hasText: reference });
     await expect(job).toBeVisible();
-    await expect(job.getByRole('link', { name: /Get directions/ })).toBeVisible();
+    await expect(job.getByRole('link', { name: /Directions/ })).toBeVisible();
     await expectAccessible(page, 'technician jobs');
 
-    await job.getByRole('button', { name: 'Start work' }).click();
-    await expect(job.getByText('In progress')).toBeVisible();
-    await job.getByRole('button', { name: 'Mark fixed' }).click();
-    // No after photo yet, so we're asked to confirm.
+    await job.getByRole('link', { name: /priority/ }).click();
+    await expect(page.getByRole('heading', { name: 'Job details' })).toBeVisible();
+    await expectAccessible(page, 'job details');
+    await page.getByRole('button', { name: 'Start job' }).click();
+    await expect(page.getByText('In progress')).toBeVisible();
+    await page.getByRole('link', { name: 'Mark fixed' }).click();
+    await expect(page.getByRole('heading', { name: 'Add an after photo' })).toBeVisible();
+    await page.getByLabel('Work note').fill('Replaced 2 m of pipe');
+    await expectAccessible(page, 'mark fixed');
+    await page.getByRole('button', { name: 'Confirm fixed' }).click();
+    // No after photo, so we're asked to confirm.
     await page.getByRole('dialog').getByRole('button', { name: 'Mark fixed' }).click();
     await expect(page.getByText('Marked fixed. The citizen has been told.')).toBeVisible();
     await context.close();

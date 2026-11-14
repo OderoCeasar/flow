@@ -148,6 +148,16 @@ Dispatchers (and admins) get a navy sidebar: **Reports**, **Map**, **Crews**, **
 - **Assign dialog** lists technicians, least busy first, with open jobs and distance. There's no live GPS for technicians, so the distance is **from their nearest open job**, and the dialog says so. A due date means the end of that working day.
 - **Crews:** each technician with their open jobs and how many they fixed today. Clicking a job opens the same drawer.
 
+### Technician app
+
+Technicians use the same phone-shaped layout as citizens, with their own **⋯** menu: My jobs, Finished jobs, language and sign out.
+
+- **My jobs:** jobs in priority order ("#1 priority"). Each card has a severity label and edge colour, the address, the distance from the technician, and a **Directions** button. **Start your route** opens Google Maps with every open job as a stop, in priority order, and shows the total distance.
+- **Distances** are straight-line estimates from the phone's position. If the technician doesn't share their location, distances are hidden and everything else still works.
+- **Job details:** photo, severity, address, a small map that opens directions, and the citizen's note. Then **Start job**, **Mark fixed**, or **Can't fix — needs follow-up**.
+- **Follow-up:** the technician gives a reason, and the job goes to the dispatcher's **Needs review** list. The job keeps its status, so the citizen isn't sent a misleading SMS.
+- **Mark fixed:** take an after photo (compressed on the phone) and add an optional work note, then **Confirm fixed**. A scheduled job is first recorded as started, so the citizen's timeline and the history show both steps. Confirming without a photo asks first.
+
 ### Street address for the pin
 
 The location card shows where the pin is in words, e.g. "Ngong Road, near Prestige Plaza · Kilimani, Nairobi". It also prefills the report's landmark field.

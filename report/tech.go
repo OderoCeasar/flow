@@ -66,6 +66,46 @@ func (s *Service) assignedJob(ctx context.Context, actor Actor, id uuid.UUID) (d
 	return r, nil
 }
 
+// Job returns one of the technician's own jobs.
+func (s *Service) Job(ctx context.Context, actor Actor, id uuid.UUID) (JobDTO, error) {
+	if _, err := s.assignedJob(ctx, actor, id); err != nil {
+		return JobDTO{}, err
+	}
+	return s.job(ctx, id)
+}
+
+// FollowUp is the technician saying "I can't fix this". The job keeps its
+// status (so the citizen gets no misleading SMS) and goes to the dispatcher's
+// review list with the reason.
+func (s *Service) FollowUp(ctx context.Context, actor Actor, id uuid.UUID, reason string) (JobDTO, error) {
+	r, err := s.assignedJob(ctx, actor, id)
+	if err != nil {
+		return JobDTO{}, err
+	}
+	reason = strings.TrimSpace(reason)
+	if len(reason) < minReason || len(reason) > 500 {
+		return JobDTO{}, apperr.Validation(map[string]string{"reason": "Say briefly why it can't be fixed now (at least 3 characters)."})
+	}
+	if r.Status == StatusFixed || r.Status == StatusInvalid {
+		return JobDTO{}, apperr.Conflict("report_closed", "This job is already closed.")
+	}
+	err = s.store.ExecTx(ctx, func(q db.Querier) error {
+		user, err := q.GetUser(ctx, actor.UserID)
+		if err != nil {
+			return err
+		}
+		if err := q.FlagReportForReview(ctx, db.FlagReportForReviewParams{ID: r.ID,
+			ReviewReason: fmt.Sprintf("%s can't fix this yet: %s", user.Name, reason)}); err != nil {
+			return err
+		}
+		return s.audit(ctx, q, r.ID, actor, "follow_up_needed", map[string]any{"reason": reason})
+	})
+	if err != nil {
+		return JobDTO{}, err
+	}
+	return s.job(ctx, r.ID)
+}
+
 func (s *Service) UpdateJobStatus(ctx context.Context, actor Actor, id uuid.UUID, status, note string) (JobDTO, error) {
 	r, err := s.assignedJob(ctx, actor, id)
 	if err != nil {

@@ -72,3 +72,38 @@ func (server *Server) uploadJobPhoto(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusCreated, job)
 }
+
+func (server *Server) getJob(ctx *gin.Context) {
+	id, ok := parseID(ctx, "id")
+	if !ok {
+		return
+	}
+	job, err := server.reports.Job(ctx, actorFrom(ctx), id)
+	if err != nil {
+		respondError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, job)
+}
+
+type followUpRequest struct {
+	Reason string `json:"reason"`
+}
+
+func (server *Server) jobFollowUp(ctx *gin.Context) {
+	id, ok := parseID(ctx, "id")
+	if !ok {
+		return
+	}
+	var req followUpRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		respondError(ctx, badRequest("Say why the job can't be fixed."))
+		return
+	}
+	job, err := server.reports.FollowUp(ctx, actorFrom(ctx), id, req.Reason)
+	if err != nil {
+		respondError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, job)
+}

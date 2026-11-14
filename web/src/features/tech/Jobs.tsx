@@ -1,142 +1,139 @@
-import { useRef, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { lazy } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Button, buttonClass } from '../../components/ui/Button';
-import { LeakTypeLabel, PriorityScore, SeverityBadge, StatusBadge } from '../../components/ui/Badges';
-import { ConfirmDialog } from '../../components/ui/Dialog';
-import { IconCamera, IconCheck, IconExternal, IconWrench } from '../../components/ui/Icons';
+import { Link, Route, Routes, useSearchParams } from 'react-router-dom';
+import { leakName, SeverityBadge, StatusBadge } from '../../components/ui/Badges';
+import { buttonClass } from '../../components/ui/Button';
+import { IconCheck, IconChevronDown, IconNavigation, IconPin } from '../../components/ui/Icons';
+import { CitizenShell } from '../../components/ui/Layout';
 import { EmptyState, ErrorState, ListSkeleton } from '../../components/ui/States';
-import { useToast } from '../../components/ui/Toast';
-import { api, upload } from '../../lib/api';
-import { directionsUrl, formatDateTime, timeAgo } from '../../lib/format';
-import { compressImage } from '../../lib/image';
+import { api } from '../../lib/api';
+import { directionsUrl, distance } from '../../lib/format';
 import type { Job } from '../../lib/types';
 import { useErrorMessage } from '../../lib/useErrorMessage';
-import { StaffShell } from '../staff/StaffShell';
+import { haversineM, routeUrl, severityEdge, useMyPosition } from './shared';
 
-function JobCard({ job }: { job: Job }) {
-  const { t, i18n } = useTranslation();
-  const qc = useQueryClient();
-  const toast = useToast();
-  const errorMessage = useErrorMessage();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState<number | null>(null);
-  const [confirmFix, setConfirmFix] = useState(false);
-  const afterPhotos = job.photos.filter((p) => p.kind === 'after');
+const JobDetail = lazy(() => import('./JobDetail'));
+const MarkFixed = lazy(() => import('./MarkFixed'));
 
-  const setStatus = useMutation({
-    mutationFn: (status: string) => api<Job>(`/tech/jobs/${job.id}/status`, { method: 'PATCH', json: { status } }),
-    onSuccess: (_, status) => {
-      void qc.invalidateQueries({ queryKey: ['jobs'] });
-      toast({ tone: 'success', message: t(status === 'fixed' ? 'tech.markedFixed' : 'tech.started') });
-    },
-    onError: (e) => toast({ tone: 'error', message: errorMessage(e) }),
+export function useJobs(includeDone: boolean) {
+  return useQuery({
+    queryKey: ['jobs', includeDone],
+    queryFn: () => api<{ items: Job[] }>(`/tech/jobs${includeDone ? '?include_done=true' : ''}`),
+    refetchInterval: 60_000,
   });
+}
 
-  const onPhoto = async (file?: File) => {
-    if (!file) return;
-    try {
-      setProgress(0);
-      const blob = await compressImage(file);
-      const form = new FormData();
-      form.append('photo', blob, 'after.jpg');
-      await upload<Job>(`/tech/jobs/${job.id}/photos`, form, setProgress);
-      void qc.invalidateQueries({ queryKey: ['jobs'] });
-      toast({ tone: 'success', message: t('tech.photoAdded') });
-    } catch (e) {
-      toast({ tone: 'error', message: errorMessage(e) });
-    } finally {
-      setProgress(null);
-      if (fileRef.current) fileRef.current.value = '';
-    }
-  };
+function JobList() {
+  const { t, i18n } = useTranslation();
+  const errorMessage = useErrorMessage();
+  const [params] = useSearchParams();
+  const showDone = params.get('done') === '1';
+  const q = useJobs(showDone);
+  const me = useMyPosition();
+  const jobs = q.data?.items ?? [];
+  const open = jobs.filter((j) => j.status !== 'fixed');
+  const route = open.length
+    ? open.reduce(
+        (acc, j) => ({ m: acc.m + (acc.at ? haversineM(acc.at, j) : 0), at: { lat: j.lat, lng: j.lng } }),
+        { m: 0, at: me as { lat: number; lng: number } | undefined },
+      ).m
+    : 0;
+  const date = new Date().toLocaleDateString(i18n.language === 'sw' ? 'sw-KE' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl bg-surface p-4">
-      <div className="flex items-start gap-3">
-        <PriorityScore score={job.priority_score} />
-        <div className="flex flex-1 flex-col gap-1">
-          <h2 className="font-semibold"><LeakTypeLabel type={job.leak_type} /></h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <SeverityBadge severity={job.severity} size="sm" />
-            <StatusBadge status={job.status} size="sm" />
-          </div>
+    <CitizenShell menu="technician" homeTo="/tech">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wider text-brand-700">{date}</p>
+          <h1 className="text-[1.9rem] font-normal leading-tight tracking-tight text-ink-heading">
+            {showDone ? t('tech.finishedJobs') : t('tech.title')}
+          </h1>
         </div>
+        {q.data && (
+          <span className="mb-1 rounded-full bg-brand-50 px-2.5 py-1 text-sm font-semibold text-brand-700">
+            {t('tech.jobCount', { count: showDone ? jobs.length : open.length })}
+          </span>
+        )}
       </div>
-      <p className="text-ink">{[job.address_text, job.zone_name].filter(Boolean).join(', ')}</p>
-      <p className="text-sm text-ink-muted">
-        <span className="font-mono">{job.reference_code}</span> · {t('tech.reported', { when: timeAgo(job.created_at, t) })}
-        {job.assignee_due_at && <> · {t('tech.due', { when: formatDateTime(job.assignee_due_at, i18n.language) })}</>}
-        {job.duplicate_count > 0 && <> · {t('tech.others', { count: job.duplicate_count })}</>}
-      </p>
-      {job.description && <p className="rounded bg-surface-muted p-2 text-sm">“{job.description}”</p>}
-      {job.photos.length > 0 && (
-        <ul className="flex gap-2 overflow-x-auto">
-          {job.photos.map((p) => (
-            <li key={p.id} className="shrink-0">
-              <img src={p.url} loading="lazy" className="h-20 w-28 rounded object-cover"
-                alt={t(p.kind === 'after' ? 'tech.altAfter' : 'tech.altBefore', { ref: job.reference_code })} />
+
+      {!showDone && open.length > 0 && (
+        <a href={routeUrl(open)} target="_blank" rel="noreferrer"
+          className="flex min-h-[72px] items-center gap-4 rounded-xl bg-brand-600 px-5 text-white shadow-sm hover:bg-brand-700 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus">
+          <IconNavigation size={22} />
+          <span className="flex flex-1 flex-col">
+            <span className="font-semibold">{t('tech.startRoute')}</span>
+            <span className="text-sm text-white/90">
+              {me ? t('tech.routeSummary', { count: open.length, km: (route / 1000).toFixed(1) }) : t('tech.jobCount', { count: open.length })}
+            </span>
+          </span>
+          <IconChevronDown size={20} className="-rotate-90" />
+          <span className="sr-only">{t('tech.opensMaps')}</span>
+        </a>
+      )}
+
+      {q.isLoading && <ListSkeleton rows={3} label={t('tech.loading')} />}
+      {q.isError && <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} />}
+      {q.data && jobs.length === 0 && (
+        <EmptyState title={showDone ? t('tech.noneDone') : t('tech.emptyTitle')} body={showDone ? undefined : t('tech.emptyBody')} icon={<IconCheck size={36} />} />
+      )}
+
+      <ol className="flex flex-col gap-3">
+        {jobs.map((j, i) => {
+          const away = me ? haversineM(me, j) : null;
+          return (
+            <li key={j.id} className="relative overflow-hidden rounded-xl border border-surface-line bg-surface">
+              <span className="absolute inset-y-0 left-0 w-1" style={{ background: severityEdge(j.severity) }} aria-hidden="true" />
+              <Link to={`/tech/jobs/${j.id}`}
+                className="block px-5 pb-3 pt-4 hover:bg-[#f7f9fb] focus-visible:outline focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-focus">
+                <span className="flex items-center justify-between gap-2">
+                  <SeverityBadge severity={j.severity} plain />
+                  {j.status === 'fixed' ? (
+                    <StatusBadge status="fixed" size="sm" />
+                  ) : (
+                    <span className="rounded-full bg-[#fdf1d8] px-2 py-0.5 text-xs font-bold text-[#7a4704]">{t('tech.rank', { n: i + 1 })}</span>
+                  )}
+                </span>
+                <span className="mt-2 block text-xl font-normal text-ink-heading">{leakName(t, j.leak_type, j.is_main)}</span>
+                <span className="mt-1 flex items-start gap-1.5 text-[15px] text-ink-muted">
+                  <IconPin size={16} className="mt-0.5 shrink-0" />
+                  {[j.address_text.split(',').slice(0, 2).join(','), j.zone_name].filter(Boolean)[0] || '—'}
+                </span>
+                {j.status === 'in_progress' && <span className="mt-2 inline-block"><StatusBadge status="in_progress" size="sm" /></span>}
+              </Link>
+              <div className="mx-5 flex items-center justify-between gap-3 border-t border-surface-line py-3">
+                <span className="text-sm text-ink-muted">
+                  {away != null ? (
+                    <><span className="font-semibold text-ink">{distance(away)}</span> {t('tech.away')}</>
+                  ) : (
+                    <span>{j.reference_code}</span>
+                  )}
+                </span>
+                <a href={directionsUrl(j.lat, j.lng)} target="_blank" rel="noreferrer"
+                  className={`${buttonClass('outline', 'md')} min-h-[44px] text-sm`}>
+                  <IconNavigation size={18} /> {t('tech.directions')}
+                  <span className="sr-only">{t('tech.directionsTo', { place: leakName(t, j.leak_type, j.is_main) })}</span>
+                </a>
+              </div>
             </li>
-          ))}
-        </ul>
+          );
+        })}
+      </ol>
+      {!showDone && jobs.length > 0 && (
+        <Link to="/tech?done=1" className="self-center rounded px-2 py-3 text-sm font-semibold text-brand-700 hover:underline focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
+          {t('tech.showFinished')}
+        </Link>
       )}
-      <a href={directionsUrl(job.lat, job.lng)} target="_blank" rel="noreferrer" className={buttonClass('secondary', 'md', true)}>
-        {t('tech.directions')} <IconExternal size={18} />
-      </a>
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} aria-hidden="true"
-        onChange={(e) => void onPhoto(e.target.files?.[0])} />
-      {job.status !== 'fixed' && (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {job.status === 'in_progress' ? (
-            <>
-              <Button variant="secondary" onClick={() => fileRef.current?.click()} loading={progress !== null} icon={<IconCamera size={20} />}>
-                {progress !== null ? t('report.uploading', { pct: progress }) : t('tech.addPhoto')}
-              </Button>
-              <Button onClick={() => (afterPhotos.length ? setStatus.mutate('fixed') : setConfirmFix(true))} loading={setStatus.isPending} icon={<IconCheck size={20} />}>
-                {t('tech.markFixed')}
-              </Button>
-            </>
-          ) : (
-            <Button className="sm:col-span-2" onClick={() => setStatus.mutate('in_progress')} loading={setStatus.isPending} icon={<IconWrench size={20} />}>
-              {t('tech.start')}
-            </Button>
-          )}
-        </div>
-      )}
-      <ConfirmDialog open={confirmFix} title={t('tech.noPhotoTitle')} body={t('tech.noPhotoBody')} confirmLabel={t('tech.fixAnyway')}
-        onCancel={() => setConfirmFix(false)}
-        onConfirm={() => { setConfirmFix(false); setStatus.mutate('fixed'); }} />
-    </li>
+    </CitizenShell>
   );
 }
 
-export default function Jobs() {
-  const { t } = useTranslation();
-  const errorMessage = useErrorMessage();
-  const [showDone, setShowDone] = useState(false);
-  const q = useQuery({
-    queryKey: ['jobs', showDone],
-    queryFn: () => api<{ items: Job[] }>(`/tech/jobs${showDone ? '?include_done=true' : ''}`),
-    refetchInterval: 60_000,
-  });
+export default function TechRoutes() {
   return (
-    <StaffShell wide={false}>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-2xl font-bold">{t('tech.title')}</h1>
-          <label className="flex min-h-touch items-center gap-2 text-sm font-medium">
-            <input type="checkbox" className="h-5 w-5 accent-brand-600" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
-            {t('tech.showDone')}
-          </label>
-        </div>
-        {q.isLoading && <ListSkeleton rows={3} label={t('tech.loading')} />}
-        {q.isError && <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} />}
-        {q.data && (q.data.items.length === 0 ? (
-          <EmptyState title={t('tech.emptyTitle')} body={t('tech.emptyBody')} icon={<IconCheck size={36} />} />
-        ) : (
-          <ul className="flex flex-col gap-3">{q.data.items.map((j) => <JobCard key={j.id} job={j} />)}</ul>
-        ))}
-      </div>
-    </StaffShell>
+    <Routes>
+      <Route index element={<JobList />} />
+      <Route path="jobs/:id" element={<JobDetail />} />
+      <Route path="jobs/:id/fix" element={<MarkFixed />} />
+    </Routes>
   );
 }

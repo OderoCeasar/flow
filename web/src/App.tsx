@@ -54,7 +54,7 @@ export default function App() {
           }
         />
         <Route
-          path="/tech"
+          path="/tech/*"
           element={
             <RequireRole roles={['technician']}>
               <TechJobs />
