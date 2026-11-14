@@ -67,13 +67,14 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
     await expect(page.getByRole('table')).toBeVisible();
     await expectAccessible(page, 'dashboard');
 
-    await page.getByLabel('Search').fill(reference);
+    await page.getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('textbox', { name: 'Search', exact: true }).fill(reference);
     const row = page.locator('tr', { hasText: reference });
     await expect(row).toHaveCount(1);
     await row.click();
 
     // Every score explains itself.
-    await expect(page.getByRole('heading', { name: 'Priority and why' })).toBeVisible();
+    await expect(page.getByText('Why this score?')).toBeVisible();
     await expect(page.getByText(/Severity: Critical/)).toBeVisible();
     await expectAccessible(page, 'report detail');
 
@@ -82,9 +83,9 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
     await page.keyboard.press('a');
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    await dialog.getByLabel('Technician').selectOption({ label: 'Otieno Ochieng' });
+    await dialog.getByRole('radio', { name: /Otieno Ochieng/ }).check();
     await expectAccessible(page, 'assign dialog');
-    await dialog.getByRole('button', { name: 'Assign' }).click();
+    await dialog.getByRole('button', { name: 'Assign job' }).click();
     await expect(page.getByText('Assigned to Otieno Ochieng.')).toBeVisible();
     await expect(row.getByText('Scheduled')).toBeVisible();
   });

@@ -34,6 +34,8 @@ export const colors = {
   accent: { 50: '#e8f6f3', 600: '#0d8a7d', 700: '#0f6b61', 800: '#115e59' },
   // Page background around the phone frame on wide screens.
   canvas: '#edf2f6',
+  // Dispatcher sidebar: deep navy, white text 11:1.
+  sidebar: { DEFAULT: '#0d3b66', active: '#1d65a6' },
   focus: '#f59e0b',
 } as const;
 

@@ -7,7 +7,15 @@ SELECT
     count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '7 days')::int                       AS fixed_this_week,
     COALESCE(avg(EXTRACT(EPOCH FROM fixed_at - created_at) / 3600)
         FILTER (WHERE is_primary AND fixed_at >= now() - interval '90 days'), 0)::float8                    AS avg_hours_to_fix,
-    count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '90 days')::int                      AS fixed_last_90_days
+    count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '90 days')::int                      AS fixed_last_90_days,
+    count(*) FILTER (WHERE created_at >= date_trunc('day', now()))::int                                     AS reports_today,
+    count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '14 days'
+                       AND fixed_at < now() - interval '7 days')::int                                       AS fixed_previous_week,
+    COALESCE(avg(EXTRACT(EPOCH FROM fixed_at - created_at) / 3600)
+        FILTER (WHERE is_primary AND fixed_at >= now() - interval '30 days'), 0)::float8                    AS avg_hours_to_fix_30d,
+    COALESCE(avg(EXTRACT(EPOCH FROM fixed_at - created_at) / 3600)
+        FILTER (WHERE is_primary AND fixed_at >= now() - interval '60 days'
+                  AND fixed_at < now() - interval '30 days'), 0)::float8                                    AS avg_hours_to_fix_prev_30d
 FROM report_view
 WHERE sqlc.narg(utility_id)::uuid IS NULL OR utility_id = sqlc.narg(utility_id);
 

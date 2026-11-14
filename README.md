@@ -36,7 +36,7 @@ The first start runs the migrations and loads Nairobi demo data:
 | Role | Email |
 |---|---|
 | Dispatcher | `dispatcher@flow.local` |
-| Technician | `tech1@flow.local`, `tech2@flow.local` |
+| Technician | `tech1@flow.local`, `tech2@flow.local`, `tech3@flow.local` |
 | Admin | `admin@flow.local` |
 
 Citizens sign in with a phone number and a one-time code. Locally, SMS goes to the worker's log (`docker compose logs -f worker`), and `DEV_OTP_ECHO=true` also shows the code on screen.
@@ -137,6 +137,16 @@ Every citizen screen uses one phone-shaped layout (`CitizenShell`).
 The header has the logo (or a back arrow), a title on inner pages, and a **⋯** menu. The menu holds Track a report, My reports, the language switch (English / Kiswahili), Install the app (when the browser offers it), and staff sign-in.
 
 The end-to-end suite checks a 360 px phone: no sideways scrolling, the main button visible without scrolling, and touch targets at least 44 px.
+
+### Dispatcher workspace
+
+Dispatchers (and admins) get a navy sidebar: **Reports**, **Map**, **Crews**, **Stats**, plus **Settings** for admins. On phones the sidebar becomes a bottom tab bar. The header shows the date and a greeting, a search button, and an avatar menu with language, keyboard shortcuts and sign out.
+
+- **Reports:** four KPI cards with trends: reports received today, critical count, fixed this week vs last week, and average time to fix vs last month. Below them, the report table and the map side by side. Filter chips cover status (with count), severity, area and date; **More filters** adds leak type, sort and "only what's on the map". On phones the table becomes a list of report cards.
+- **Map pins** are drops in each severity's colour, with a "!" for critical. Overlapping pins merge into a numbered bubble that zooms in when clicked. "Search an area" flies to a Nairobi zone, and a legend shows the severities. Pins are a pointer shortcut; every report is also a keyboard-reachable row.
+- **Report drawer** slides in from the right without hiding the list, so J/K still work. It shows the photo, a mini map and address, the citizen's note, the priority score with "Why this score?", the Flow suggestion (Accept / Change), linked reports (merge the suggested duplicate, or split one out), actions (assign, verify, change priority, mark as not a leak) and the activity history.
+- **Assign dialog** lists technicians, least busy first, with open jobs and distance. There's no live GPS for technicians, so the distance is **from their nearest open job**, and the dialog says so. A due date means the end of that working day.
+- **Crews:** each technician with their open jobs and how many they fixed today. Clicking a job opens the same drawer.
 
 ### Street address for the pin
 

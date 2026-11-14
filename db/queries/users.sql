@@ -60,3 +60,23 @@ UPDATE otp_codes SET attempts = attempts + 1 WHERE id = $1;
 
 -- name: ConsumeOTP :exec
 UPDATE otp_codes SET consumed_at = now() WHERE id = $1;
+
+-- name: ListTechnicianWorkload :many
+-- Active technicians with their open jobs, jobs fixed today, and how far
+-- their nearest open job is from a given report (-1 when unknown). There is
+-- no live technician location, so "nearest job" stands in for where they are.
+SELECT u.id,
+       u.name,
+       (count(r.id) FILTER (WHERE r.status IN ('verified', 'scheduled', 'in_progress')))::int AS open_jobs,
+       (count(r.id) FILTER (WHERE r.status = 'fixed' AND r.fixed_at >= date_trunc('day', now())))::int AS fixed_today,
+       COALESCE(min(ST_Distance(r.location, t.location))
+           FILTER (WHERE r.status IN ('verified', 'scheduled', 'in_progress') AND r.id <> t.id), -1)::float8 AS nearest_job_m
+FROM users u
+LEFT JOIN assignments a ON a.technician_id = u.id AND a.active
+LEFT JOIN reports r ON r.id = a.report_id
+LEFT JOIN reports t ON t.id = sqlc.narg(report_id)::uuid
+WHERE u.role = 'technician'
+  AND u.active
+  AND (sqlc.narg(utility_id)::uuid IS NULL OR u.utility_id = sqlc.narg(utility_id))
+GROUP BY u.id, u.name
+ORDER BY open_jobs, u.name;

@@ -243,6 +243,66 @@ func (q *Queries) ListStaff(ctx context.Context, arg ListStaffParams) ([]User, e
 	return items, nil
 }
 
+const listTechnicianWorkload = `-- name: ListTechnicianWorkload :many
+SELECT u.id,
+       u.name,
+       (count(r.id) FILTER (WHERE r.status IN ('verified', 'scheduled', 'in_progress')))::int AS open_jobs,
+       (count(r.id) FILTER (WHERE r.status = 'fixed' AND r.fixed_at >= date_trunc('day', now())))::int AS fixed_today,
+       COALESCE(min(ST_Distance(r.location, t.location))
+           FILTER (WHERE r.status IN ('verified', 'scheduled', 'in_progress') AND r.id <> t.id), -1)::float8 AS nearest_job_m
+FROM users u
+LEFT JOIN assignments a ON a.technician_id = u.id AND a.active
+LEFT JOIN reports r ON r.id = a.report_id
+LEFT JOIN reports t ON t.id = $1::uuid
+WHERE u.role = 'technician'
+  AND u.active
+  AND ($2::uuid IS NULL OR u.utility_id = $2)
+GROUP BY u.id, u.name
+ORDER BY open_jobs, u.name
+`
+
+type ListTechnicianWorkloadParams struct {
+	ReportID  *uuid.UUID `json:"report_id"`
+	UtilityID *uuid.UUID `json:"utility_id"`
+}
+
+type ListTechnicianWorkloadRow struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	OpenJobs    int32     `json:"open_jobs"`
+	FixedToday  int32     `json:"fixed_today"`
+	NearestJobM float64   `json:"nearest_job_m"`
+}
+
+// Active technicians with their open jobs, jobs fixed today, and how far
+// their nearest open job is from a given report (-1 when unknown). There is
+// no live technician location, so "nearest job" stands in for where they are.
+func (q *Queries) ListTechnicianWorkload(ctx context.Context, arg ListTechnicianWorkloadParams) ([]ListTechnicianWorkloadRow, error) {
+	rows, err := q.db.Query(ctx, listTechnicianWorkload, arg.ReportID, arg.UtilityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTechnicianWorkloadRow{}
+	for rows.Next() {
+		var i ListTechnicianWorkloadRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.OpenJobs,
+			&i.FixedToday,
+			&i.NearestJobM,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
 UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1 AND revoked_at IS NULL
 `

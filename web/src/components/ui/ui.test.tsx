@@ -24,7 +24,7 @@ describe('badges', () => {
 
   it('gives the priority score an accessible name', () => {
     render(<PriorityScore score={73} overridden />);
-    expect(screen.getByLabelText('Priority 73 out of 100, set by a dispatcher')).toBeInTheDocument();
+    expect(screen.getByText('Priority 73 out of 100, set by a dispatcher')).toHaveClass('sr-only');
   });
 
   it('switches language', async () => {

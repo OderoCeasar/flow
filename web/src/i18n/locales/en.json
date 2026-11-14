@@ -65,7 +65,8 @@
     "dripping": "Dripping tap or meter",
     "sewage": "Sewage",
     "other": "Other",
-    "unknown": "Leak (type not given)"
+    "unknown": "Leak (type not given)",
+    "burst_main": "Burst main"
   },
   "aiLabel": {
     "burst_pipe": "burst pipe",
@@ -312,7 +313,10 @@
     "reports": "Reports",
     "stats": "Stats",
     "admin": "Admin",
-    "jobs": "My jobs"
+    "jobs": "My jobs",
+    "crews": "Crews",
+    "map": "Map",
+    "settings": "Settings"
   },
   "dashboard": {
     "search": "Search",
@@ -358,10 +362,12 @@
       "priority": "Priority",
       "severity": "Severity",
       "report": "Report",
-      "location": "Area",
+      "location": "Location",
       "reports": "Reports",
       "status": "Status",
-      "age": "Reported"
+      "age": "Age",
+      "assigned": "Assigned to",
+      "leakType": "Leak type"
     },
     "keys": {
       "next": "Move down / up the list",
@@ -371,7 +377,23 @@
       "merge": "Merge with the suggested duplicate",
       "close": "Close the report",
       "help": "Show this list"
-    }
+    },
+    "allReports": "All reports",
+    "areaNotFound": "No area with that name. Try Kibra or Westlands.",
+    "clearSearch": "Clear search",
+    "clusterLabel": "{{count}} reports here. Click to zoom in.",
+    "date": "Date",
+    "filters": "Filters",
+    "legend": "Map key",
+    "mapCount_one": "{{count}} report on the map",
+    "mapCount_other": "{{count}} reports on the map",
+    "openReports": "Open reports",
+    "reportCount_one": "{{count}} report",
+    "reportCount_other": "{{count}} reports",
+    "reportsCount_one": "{{count}} report",
+    "reportsCount_other": "{{count}} reports",
+    "searchArea": "Search an area",
+    "unassigned": "Unassigned"
   },
   "priority": {
     "title": "Priority and why",
@@ -452,7 +474,26 @@
     "reason": "Reason",
     "reasonHint": "A short note, like “flooding a clinic entrance”.",
     "reasonRequired": "Add a short reason (at least 3 characters).",
-    "range": "Use a number from 0 to 100."
+    "range": "Use a number from 0 to 100.",
+    "activity": "Activity",
+    "assignTech": "Assign to technician",
+    "change": "Change",
+    "checked": "A dispatcher has checked this.",
+    "citizenNote": "Citizen note",
+    "flowSuggestion": "Flow suggestion",
+    "linkedReports": "Linked reports",
+    "looksLike": "Looks like: {{label}}",
+    "maybeNotLeak": "The photo may not show a leak.",
+    "mergeSuggested": "Merge with it",
+    "noLinked": "No other reports of this leak yet.",
+    "priorityScore": "Priority score",
+    "reportCount_one": "{{count}} report",
+    "reportCount_other": "{{count}} reports",
+    "sameLeak": "These reports show the same leak. Split one out if it's a different leak.",
+    "sureFromPhoto": "{{pct}}% sure, based on the photo.",
+    "takeAction": "Take action",
+    "titleOn": "{{type}} on {{place}}",
+    "whyScore": "Why this score?"
   },
   "audit": {
     "assigned": "Assigned",
@@ -465,14 +506,20 @@
     "citizen_feedback": "Reporter answered whether it was fixed"
   },
   "assign": {
-    "title": "Assign {{ref}}",
+    "title": "Choose a technician",
     "technician": "Technician",
     "choose": "Choose a technician",
     "pick": "Pick a technician.",
     "due": "Fix by",
-    "dueHint": "When the repair should be done.",
+    "dueHint": "The repair should be done by the end of this day.",
     "note": "The report moves to Scheduled and the citizen gets an SMS.",
-    "confirm": "Assign"
+    "confirm": "Assign job",
+    "eyebrow": "Assign job · {{ref}}",
+    "fromNearestJob": "from nearest job",
+    "noNearbyJob": "no open jobs",
+    "none": "No technicians are available. Ask an admin to add one.",
+    "openJobs_one": "{{count}} open job",
+    "openJobs_other": "{{count}} open jobs"
   },
   "actions": {
     "verified": "Marked as verified.",
@@ -511,7 +558,8 @@
     "total": "Total",
     "bar": "Bar",
     "barTooltip": "{{area}}: {{open}} open of {{total}}",
-    "noReports": "No reports in the last 30 days."
+    "noReports": "No reports in the last 30 days.",
+    "reviewTile": "Need review"
   },
   "tech": {
     "title": "My jobs",
@@ -648,5 +696,44 @@
   "timeline": {
     "current": "Current status",
     "waiting": "Waiting"
+  },
+  "account": {
+    "menu": "Account menu for {{name}}"
+  },
+  "activity": {
+    "by": " by {{name}}",
+    "status": {
+      "received": "Report received",
+      "verified": "Report verified",
+      "scheduled": "Repair scheduled",
+      "in_progress": "Work started",
+      "fixed": "Marked fixed",
+      "invalid": "Marked as not a leak"
+    }
+  },
+  "crews": {
+    "empty": "No technicians yet",
+    "emptyBody": "An admin can add technicians under Settings.",
+    "fixedToday_one": "{{count}} fixed today",
+    "fixedToday_other": "{{count}} fixed today",
+    "free": "No open jobs right now."
+  },
+  "greeting": {
+    "morning": "Good morning, {{name}}",
+    "afternoon": "Good afternoon, {{name}}",
+    "evening": "Good evening, {{name}}"
+  },
+  "kpi": {
+    "label": "Key numbers",
+    "open": "Open leaks",
+    "critical": "Critical",
+    "fixedWeek": "Fixed this week",
+    "avgFix": "Average time to fix",
+    "today": "+{{count}} today",
+    "needsAttention": "Needs attention",
+    "allClear": "None right now",
+    "vsLastWeek": "{{pct}}% vs last week",
+    "fasterThisMonth": "{{hours}}h faster this month",
+    "slowerThisMonth": "{{hours}}h slower this month"
   }
 }

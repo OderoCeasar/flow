@@ -170,6 +170,10 @@ export interface Stats {
   fixed_last_90_days: number;
   water_lost_litres_90d: number;
   water_loss_rate_lpd: number;
+  reports_today: number;
+  fixed_previous_week: number;
+  avg_hours_to_fix_30d: number;
+  avg_hours_to_fix_prev_30d: number;
   per_zone: { zone_id: string | null; zone_name: string; reports: number; open: number }[];
 }
 
@@ -184,4 +188,17 @@ export interface Settings {
     duplicate_window_days: number;
     review_confidence: number;
   };
+}
+
+export interface Technician {
+  id: string;
+  name: string;
+  open_jobs: number;
+  fixed_today: number;
+  nearest_job_m: number | null;
+}
+
+export interface Crew {
+  technician: Technician;
+  jobs: Report[];
 }

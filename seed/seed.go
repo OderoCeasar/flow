@@ -135,6 +135,7 @@ func Seed(ctx context.Context, store db.Store, reports *report.Service) error {
 		{"dispatcher@flow.local", "Wanjiku Mwangi", "dispatcher"},
 		{"tech1@flow.local", "Otieno Ochieng", "technician"},
 		{"tech2@flow.local", "Amina Hassan", "technician"},
+		{"tech3@flow.local", "Peter Mwangi", "technician"},
 	} {
 		params := db.CreateUserParams{Role: u.role, Name: u.name, Email: ptr(u.email), PasswordHash: &hash}
 		if u.role != "admin" {

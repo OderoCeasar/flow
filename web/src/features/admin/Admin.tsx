@@ -13,7 +13,7 @@ import { useToast } from '../../components/ui/Toast';
 import { api, ApiError } from '../../lib/api';
 import type { Role, Settings } from '../../lib/types';
 import { useErrorMessage } from '../../lib/useErrorMessage';
-import { StaffShell } from '../staff/StaffShell';
+import { DispatcherShell } from '../dispatcher/DispatcherShell';
 
 const PolygonEditor = lazy(() => import('../../components/map/AreaEditor').then((m) => ({ default: m.PolygonEditor })));
 const PointPicker = lazy(() => import('../../components/map/AreaEditor').then((m) => ({ default: m.PointPicker })));
@@ -51,9 +51,8 @@ function useUtilities() {
 export default function Admin() {
   const { t } = useTranslation();
   return (
-    <StaffShell>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-        <h1 className="text-2xl font-bold">{t('admin.title')}</h1>
+    <DispatcherShell title={t('admin.title')}>
+      <div className="flex w-full max-w-5xl flex-col gap-4">
         <nav aria-label={t('admin.sections')} className="flex flex-wrap gap-1 border-b border-surface-line">
           <NavLink to="/admin/priority" className={tab}>{t('admin.priority')}</NavLink>
           <NavLink to="/admin/sites" className={tab}>{t('admin.sites')}</NavLink>
@@ -68,7 +67,7 @@ export default function Admin() {
           <Route path="utilities" element={<UtilitiesTab />} />
         </Routes>
       </div>
-    </StaffShell>
+    </DispatcherShell>
   );
 }
 

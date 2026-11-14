@@ -21,19 +21,31 @@ SELECT
     count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '7 days')::int                       AS fixed_this_week,
     COALESCE(avg(EXTRACT(EPOCH FROM fixed_at - created_at) / 3600)
         FILTER (WHERE is_primary AND fixed_at >= now() - interval '90 days'), 0)::float8                    AS avg_hours_to_fix,
-    count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '90 days')::int                      AS fixed_last_90_days
+    count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '90 days')::int                      AS fixed_last_90_days,
+    count(*) FILTER (WHERE created_at >= date_trunc('day', now()))::int                                     AS reports_today,
+    count(*) FILTER (WHERE is_primary AND fixed_at >= now() - interval '14 days'
+                       AND fixed_at < now() - interval '7 days')::int                                       AS fixed_previous_week,
+    COALESCE(avg(EXTRACT(EPOCH FROM fixed_at - created_at) / 3600)
+        FILTER (WHERE is_primary AND fixed_at >= now() - interval '30 days'), 0)::float8                    AS avg_hours_to_fix_30d,
+    COALESCE(avg(EXTRACT(EPOCH FROM fixed_at - created_at) / 3600)
+        FILTER (WHERE is_primary AND fixed_at >= now() - interval '60 days'
+                  AND fixed_at < now() - interval '30 days'), 0)::float8                                    AS avg_hours_to_fix_prev_30d
 FROM report_view
 WHERE $1::uuid IS NULL OR utility_id = $1
 `
 
 type GetStatsSummaryRow struct {
-	OpenLeaks       int32   `json:"open_leaks"`
-	CriticalOpen    int32   `json:"critical_open"`
-	NeedsReview     int32   `json:"needs_review"`
-	ReportsThisWeek int32   `json:"reports_this_week"`
-	FixedThisWeek   int32   `json:"fixed_this_week"`
-	AvgHoursToFix   float64 `json:"avg_hours_to_fix"`
-	FixedLast90Days int32   `json:"fixed_last_90_days"`
+	OpenLeaks            int32   `json:"open_leaks"`
+	CriticalOpen         int32   `json:"critical_open"`
+	NeedsReview          int32   `json:"needs_review"`
+	ReportsThisWeek      int32   `json:"reports_this_week"`
+	FixedThisWeek        int32   `json:"fixed_this_week"`
+	AvgHoursToFix        float64 `json:"avg_hours_to_fix"`
+	FixedLast90Days      int32   `json:"fixed_last_90_days"`
+	ReportsToday         int32   `json:"reports_today"`
+	FixedPreviousWeek    int32   `json:"fixed_previous_week"`
+	AvgHoursToFix30d     float64 `json:"avg_hours_to_fix_30d"`
+	AvgHoursToFixPrev30d float64 `json:"avg_hours_to_fix_prev_30d"`
 }
 
 func (q *Queries) GetStatsSummary(ctx context.Context, utilityID *uuid.UUID) (GetStatsSummaryRow, error) {
@@ -47,6 +59,10 @@ func (q *Queries) GetStatsSummary(ctx context.Context, utilityID *uuid.UUID) (Ge
 		&i.FixedThisWeek,
 		&i.AvgHoursToFix,
 		&i.FixedLast90Days,
+		&i.ReportsToday,
+		&i.FixedPreviousWeek,
+		&i.AvgHoursToFix30d,
+		&i.AvgHoursToFixPrev30d,
 	)
 	return i, err
 }

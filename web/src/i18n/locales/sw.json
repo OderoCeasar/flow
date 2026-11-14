@@ -65,7 +65,8 @@
     "dripping": "Mfereji au mita inavuja",
     "sewage": "Maji taka",
     "other": "Mengineyo",
-    "unknown": "Uvujaji (aina haijatajwa)"
+    "unknown": "Uvujaji (aina haijatajwa)",
+    "burst_main": "Bomba kuu limepasuka"
   },
   "aiLabel": {
     "burst_pipe": "bomba lililopasuka",
@@ -312,7 +313,10 @@
     "reports": "Ripoti",
     "stats": "Takwimu",
     "admin": "Usimamizi",
-    "jobs": "Kazi zangu"
+    "jobs": "Kazi zangu",
+    "crews": "Timu",
+    "map": "Ramani",
+    "settings": "Mipangilio"
   },
   "dashboard": {
     "search": "Tafuta",
@@ -358,10 +362,12 @@
       "priority": "Kipaumbele",
       "severity": "Uzito",
       "report": "Ripoti",
-      "location": "Eneo",
+      "location": "Mahali",
       "reports": "Ripoti",
       "status": "Hali",
-      "age": "Iliripotiwa"
+      "age": "Muda",
+      "assigned": "Amepewa",
+      "leakType": "Aina ya uvujaji"
     },
     "keys": {
       "next": "Shuka / panda kwenye orodha",
@@ -371,7 +377,23 @@
       "merge": "Unganisha na nakala inayopendekezwa",
       "close": "Funga ripoti",
       "help": "Onyesha orodha hii"
-    }
+    },
+    "allReports": "Ripoti zote",
+    "areaNotFound": "Hakuna eneo lenye jina hilo. Jaribu Kibra au Westlands.",
+    "clearSearch": "Futa utafutaji",
+    "clusterLabel": "Ripoti {{count}} hapa. Bofya kukaribia.",
+    "date": "Tarehe",
+    "filters": "Vichujio",
+    "legend": "Ufunguo wa ramani",
+    "mapCount_one": "Ripoti {{count}} kwenye ramani",
+    "mapCount_other": "Ripoti {{count}} kwenye ramani",
+    "openReports": "Ripoti zilizo wazi",
+    "reportCount_one": "Ripoti {{count}}",
+    "reportCount_other": "Ripoti {{count}}",
+    "reportsCount_one": "Ripoti {{count}}",
+    "reportsCount_other": "Ripoti {{count}}",
+    "searchArea": "Tafuta eneo",
+    "unassigned": "Hajapewa"
   },
   "priority": {
     "title": "Kipaumbele na sababu",
@@ -452,7 +474,26 @@
     "reason": "Sababu",
     "reasonHint": "Maelezo mafupi, kama “maji yanafurika mlango wa zahanati”.",
     "reasonRequired": "Weka sababu fupi (angalau herufi 3).",
-    "range": "Tumia nambari kati ya 0 na 100."
+    "range": "Tumia nambari kati ya 0 na 100.",
+    "activity": "Shughuli",
+    "assignTech": "Mpe fundi",
+    "change": "Badilisha",
+    "checked": "Msimamizi ameshakagua hili.",
+    "citizenNote": "Maelezo ya mwananchi",
+    "flowSuggestion": "Pendekezo la Flow",
+    "linkedReports": "Ripoti zinazohusiana",
+    "looksLike": "Inaonekana kuwa: {{label}}",
+    "maybeNotLeak": "Huenda picha haionyeshi uvujaji.",
+    "mergeSuggested": "Unganisha nayo",
+    "noLinked": "Bado hakuna ripoti nyingine za uvujaji huu.",
+    "priorityScore": "Alama ya kipaumbele",
+    "reportCount_one": "Ripoti {{count}}",
+    "reportCount_other": "Ripoti {{count}}",
+    "sameLeak": "Ripoti hizi zinaonyesha uvujaji ule ule. Itenganishe moja kama ni uvujaji mwingine.",
+    "sureFromPhoto": "Uhakika {{pct}}%, kulingana na picha.",
+    "takeAction": "Chukua hatua",
+    "titleOn": "{{type}} – {{place}}",
+    "whyScore": "Kwa nini alama hii?"
   },
   "audit": {
     "assigned": "Amepewa fundi",
@@ -465,14 +506,20 @@
     "citizen_feedback": "Mripoti alijibu kama imerekebishwa"
   },
   "assign": {
-    "title": "Mpe fundi {{ref}}",
+    "title": "Chagua fundi",
     "technician": "Fundi",
     "choose": "Chagua fundi",
     "pick": "Chagua fundi.",
     "due": "Irekebishwe kabla ya",
-    "dueHint": "Wakati ukarabati unapaswa kukamilika.",
+    "dueHint": "Ukarabati ukamilike kufikia mwisho wa siku hii.",
     "note": "Ripoti itahamia Imepangwa na mwananchi atapata SMS.",
-    "confirm": "Mpe"
+    "confirm": "Kabidhi kazi",
+    "eyebrow": "Kabidhi kazi · {{ref}}",
+    "fromNearestJob": "kutoka kazi iliyo karibu",
+    "noNearbyJob": "hana kazi iliyo wazi",
+    "none": "Hakuna fundi aliyepo. Muombe msimamizi mkuu aongeze mmoja.",
+    "openJobs_one": "Kazi {{count}} iliyo wazi",
+    "openJobs_other": "Kazi {{count}} zilizo wazi"
   },
   "actions": {
     "verified": "Imewekwa kama imethibitishwa.",
@@ -511,7 +558,8 @@
     "total": "Jumla",
     "bar": "Mstari",
     "barTooltip": "{{area}}: {{open}} wazi kati ya {{total}}",
-    "noReports": "Hakuna ripoti katika siku 30 zilizopita."
+    "noReports": "Hakuna ripoti katika siku 30 zilizopita.",
+    "reviewTile": "Zinahitaji ukaguzi"
   },
   "tech": {
     "title": "Kazi zangu",
@@ -648,5 +696,44 @@
   "timeline": {
     "current": "Hali ya sasa",
     "waiting": "Inasubiri"
+  },
+  "account": {
+    "menu": "Menyu ya akaunti ya {{name}}"
+  },
+  "activity": {
+    "by": " na {{name}}",
+    "status": {
+      "received": "Ripoti imepokelewa",
+      "verified": "Ripoti imethibitishwa",
+      "scheduled": "Ukarabati umepangwa",
+      "in_progress": "Kazi imeanza",
+      "fixed": "Imewekwa kama imerekebishwa",
+      "invalid": "Imewekwa kama si uvujaji"
+    }
+  },
+  "crews": {
+    "empty": "Bado hakuna mafundi",
+    "emptyBody": "Msimamizi mkuu anaweza kuongeza mafundi kwenye Mipangilio.",
+    "fixedToday_one": "{{count}} imerekebishwa leo",
+    "fixedToday_other": "{{count}} zimerekebishwa leo",
+    "free": "Hakuna kazi iliyo wazi kwa sasa."
+  },
+  "greeting": {
+    "morning": "Habari za asubuhi, {{name}}",
+    "afternoon": "Habari za mchana, {{name}}",
+    "evening": "Habari za jioni, {{name}}"
+  },
+  "kpi": {
+    "label": "Takwimu kuu",
+    "open": "Uvujaji ulio wazi",
+    "critical": "Hatari",
+    "fixedWeek": "Zilizorekebishwa wiki hii",
+    "avgFix": "Muda wa wastani wa kurekebisha",
+    "today": "+{{count}} leo",
+    "needsAttention": "Inahitaji kushughulikiwa",
+    "allClear": "Hakuna kwa sasa",
+    "vsLastWeek": "{{pct}}% ukilinganisha na wiki iliyopita",
+    "fasterThisMonth": "Saa {{hours}} haraka zaidi mwezi huu",
+    "slowerThisMonth": "Saa {{hours}} polepole zaidi mwezi huu"
   }
 }

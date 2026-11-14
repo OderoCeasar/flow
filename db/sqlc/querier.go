@@ -65,6 +65,8 @@ type Querier interface {
 	// Open groups whose centre is within the radius, active since the cutoff, with
 	// a matching leak type. An unknown leak type on either side matches anything.
 	ListNearbyOpenClusters(ctx context.Context, arg ListNearbyOpenClustersParams) ([]ListNearbyOpenClustersRow, error)
+	// Every open job that has a technician, for the crews page.
+	ListOpenAssignedReports(ctx context.Context, utilityID *uuid.UUID) ([]ReportView, error)
 	ListOpenPrimaryReportIDs(ctx context.Context) ([]uuid.UUID, error)
 	ListPhotosForReports(ctx context.Context, reportIds []uuid.UUID) ([]ReportPhoto, error)
 	// One row per group of duplicates (its primary report), filtered and sorted
@@ -77,6 +79,10 @@ type Querier interface {
 	// Every non-citizen account, optionally narrowed to one utility and role.
 	ListStaff(ctx context.Context, arg ListStaffParams) ([]User, error)
 	ListStatusEvents(ctx context.Context, reportID uuid.UUID) ([]ListStatusEventsRow, error)
+	// Active technicians with their open jobs, jobs fixed today, and how far
+	// their nearest open job is from a given report (-1 when unknown). There is
+	// no live technician location, so "nearest job" stands in for where they are.
+	ListTechnicianWorkload(ctx context.Context, arg ListTechnicianWorkloadParams) ([]ListTechnicianWorkloadRow, error)
 	ListUtilities(ctx context.Context) ([]ListUtilitiesRow, error)
 	ListZones(ctx context.Context, utilityID *uuid.UUID) ([]ListZonesRow, error)
 	MarkClusterMerged(ctx context.Context, id uuid.UUID) error

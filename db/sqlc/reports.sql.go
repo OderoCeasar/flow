@@ -563,6 +563,78 @@ func (q *Queries) ListJobsForTechnician(ctx context.Context, arg ListJobsForTech
 	return items, nil
 }
 
+const listOpenAssignedReports = `-- name: ListOpenAssignedReports :many
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view
+WHERE assignee_id IS NOT NULL
+  AND status IN ('verified', 'scheduled', 'in_progress')
+  AND ($1::uuid IS NULL OR utility_id = $1)
+ORDER BY priority_score DESC
+`
+
+// Every open job that has a technician, for the crews page.
+func (q *Queries) ListOpenAssignedReports(ctx context.Context, utilityID *uuid.UUID) ([]ReportView, error) {
+	rows, err := q.db.Query(ctx, listOpenAssignedReports, utilityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ReportView{}
+	for rows.Next() {
+		var i ReportView
+		if err := rows.Scan(
+			&i.ID,
+			&i.ReferenceCode,
+			&i.ReporterID,
+			&i.ReporterPhone,
+			&i.Locale,
+			&i.Lat,
+			&i.Lng,
+			&i.AddressText,
+			&i.Description,
+			&i.LeakType,
+			&i.SizeEstimate,
+			&i.Duration,
+			&i.IsMain,
+			&i.Status,
+			&i.Severity,
+			&i.SeveritySource,
+			&i.SeverityReason,
+			&i.PriorityScore,
+			&i.PriorityBreakdown,
+			&i.PriorityOverride,
+			&i.PriorityOverrideReason,
+			&i.AiText,
+			&i.NeedsReview,
+			&i.ReviewReason,
+			&i.InvalidReason,
+			&i.ClusterID,
+			&i.SuggestedClusterID,
+			&i.UtilityID,
+			&i.ZoneID,
+			&i.ZoneName,
+			&i.AnalyzedAt,
+			&i.FixedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DuplicateCount,
+			&i.IsPrimary,
+			&i.AssigneeID,
+			&i.AssigneeName,
+			&i.AssigneeDueAt,
+			&i.SeverityRank,
+			&i.CitizenFeedback,
+			&i.CitizenFeedbackAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOpenPrimaryReportIDs = `-- name: ListOpenPrimaryReportIDs :many
 SELECT id FROM report_view WHERE is_primary AND status NOT IN ('fixed', 'invalid')
 `

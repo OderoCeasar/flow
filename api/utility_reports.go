@@ -176,7 +176,16 @@ func (server *Server) splitCluster(ctx *gin.Context) {
 }
 
 func (server *Server) listTechnicians(ctx *gin.Context) {
-	techs, err := server.reports.Technicians(ctx, actorFrom(ctx))
+	var forReport *uuid.UUID
+	if v := ctx.Query("report_id"); v != "" {
+		id, err := uuid.Parse(v)
+		if err != nil {
+			respondError(ctx, badRequest("That report ID isn't valid."))
+			return
+		}
+		forReport = &id
+	}
+	techs, err := server.reports.Technicians(ctx, actorFrom(ctx), forReport)
 	if err != nil {
 		respondError(ctx, err)
 		return
@@ -200,4 +209,13 @@ func (server *Server) listZones(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"items": zones})
+}
+
+func (server *Server) listCrews(ctx *gin.Context) {
+	crews, err := server.reports.Crews(ctx, actorFrom(ctx))
+	if err != nil {
+		respondError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"items": crews})
 }

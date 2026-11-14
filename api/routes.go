@@ -69,6 +69,7 @@ func (server *Server) setupRouter() {
 	utility.POST("/clusters/merge", server.mergeClusters)
 	utility.POST("/clusters/:id/split", server.splitCluster)
 	utility.GET("/technicians", server.listTechnicians)
+	utility.GET("/crews", server.listCrews)
 	utility.GET("/stats", server.utilityStats)
 	utility.GET("/zones", server.listZones)
 

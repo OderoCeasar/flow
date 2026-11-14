@@ -209,3 +209,11 @@ WHERE id = @id;
 -- name: FlagReportForReview :exec
 UPDATE reports SET needs_review = true, review_reason = @review_reason, updated_at = now()
 WHERE id = @id;
+
+-- name: ListOpenAssignedReports :many
+-- Every open job that has a technician, for the crews page.
+SELECT * FROM report_view
+WHERE assignee_id IS NOT NULL
+  AND status IN ('verified', 'scheduled', 'in_progress')
+  AND (sqlc.narg(utility_id)::uuid IS NULL OR utility_id = sqlc.narg(utility_id))
+ORDER BY priority_score DESC;

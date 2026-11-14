@@ -593,25 +593,68 @@ func (s *Service) openClusterFor(ctx context.Context, actor Actor, id uuid.UUID)
 }
 
 type TechnicianDTO struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	OpenJobs   int32     `json:"open_jobs"`
+	FixedToday int32     `json:"fixed_today"`
+	// Metres from the technician's nearest open job to the report being
+	// assigned. Nil when unknown (no report given, or no open jobs).
+	NearestJobM *int `json:"nearest_job_m"`
 }
 
-func (s *Service) Technicians(ctx context.Context, actor Actor) ([]TechnicianDTO, error) {
+// Technicians lists the utility's active technicians, least busy first.
+// With a report, each also gets the distance from their nearest open job.
+func (s *Service) Technicians(ctx context.Context, actor Actor, forReport *uuid.UUID) ([]TechnicianDTO, error) {
 	if !actor.IsStaff() {
 		return nil, apperr.Forbidden()
 	}
-	users, err := s.store.ListStaff(ctx, db.ListStaffParams{UtilityID: actor.UtilityID, Role: "technician"})
+	if forReport != nil {
+		if _, err := s.loadReport(ctx, actor, *forReport); err != nil {
+			return nil, err
+		}
+	}
+	rows, err := s.store.ListTechnicianWorkload(ctx, db.ListTechnicianWorkloadParams{ReportID: forReport, UtilityID: actor.UtilityID})
 	if err != nil {
 		return nil, err
 	}
-	out := []TechnicianDTO{}
-	for _, u := range users {
-		if u.Active {
-			out = append(out, TechnicianDTO{ID: u.ID, Name: u.Name})
+	out := make([]TechnicianDTO, 0, len(rows))
+	for _, r := range rows {
+		t := TechnicianDTO{ID: r.ID, Name: r.Name, OpenJobs: r.OpenJobs, FixedToday: r.FixedToday}
+		if r.NearestJobM >= 0 {
+			t.NearestJobM = ptr(int(math.Round(r.NearestJobM)))
 		}
+		out = append(out, t)
 	}
 	return out, nil
+}
+
+type Crew struct {
+	Technician TechnicianDTO `json:"technician"`
+	Jobs       []ReportDTO   `json:"jobs"`
+}
+
+// Crews lists every technician with their open jobs, highest priority first.
+func (s *Service) Crews(ctx context.Context, actor Actor) ([]Crew, error) {
+	techs, err := s.Technicians(ctx, actor, nil)
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := s.store.ListOpenAssignedReports(ctx, actor.UtilityID)
+	if err != nil {
+		return nil, err
+	}
+	crews := make([]Crew, len(techs))
+	index := map[uuid.UUID]int{}
+	for i, t := range techs {
+		crews[i] = Crew{Technician: t, Jobs: []ReportDTO{}}
+		index[t.ID] = i
+	}
+	for _, j := range jobs {
+		if i, ok := index[*j.AssigneeID]; ok {
+			crews[i].Jobs = append(crews[i].Jobs, toDTO(j))
+		}
+	}
+	return crews, nil
 }
 
 func haversineM(lat1, lng1, lat2, lng2 float64) float64 {

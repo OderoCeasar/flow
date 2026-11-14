@@ -5,6 +5,7 @@ import { api } from '../../lib/api';
 import { duration, formatNumber } from '../../lib/format';
 import type { Stats as StatsData } from '../../lib/types';
 import { useErrorMessage } from '../../lib/useErrorMessage';
+import { Kpis } from './Kpis';
 
 // Bar colours checked with the dataviz palette validator (lightness, chroma,
 // colour-blind separation and contrast all pass on white).
@@ -13,7 +14,7 @@ const CLOSED = '#4f97de';
 
 function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg bg-surface p-4">
+    <div className="flex flex-col gap-1 rounded-xl border border-surface-line bg-surface p-4">
       <span className="text-sm font-semibold text-ink-muted">{label}</span>
       <span className="text-3xl font-bold tabular-nums text-ink">{value}</span>
       {sub && <span className="text-sm text-ink-subtle">{sub}</span>}
@@ -28,33 +29,33 @@ export default function Stats() {
 
   if (q.isLoading)
     return (
-      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4" role="status" aria-label={t('app.loading')}>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="status" aria-label={t('app.loading')}>
         {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28" />)}
         <Skeleton className="h-72 sm:col-span-2 lg:col-span-4" />
       </div>
     );
-  if (q.isError) return <div className="p-4"><ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} /></div>;
+  if (q.isError) return <div><ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} /></div>;
   const s = q.data!;
   const zones = s.per_zone.slice(0, 10);
   const max = Math.max(1, ...zones.map((z) => z.reports));
   const cubic = (litres: number) => formatNumber(Math.round(litres / 1000), i18n.language);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-xl font-bold">{t('stats.title')}</h1>
+    <div className="flex flex-col gap-4">
+      <Kpis />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label={t('stats.open')} value={formatNumber(s.open_leaks, i18n.language)}
-          sub={t('stats.openSub', { critical: s.critical_open, review: s.needs_review })} />
-        <Tile label={t('stats.avgFix')} value={s.fixed_last_90_days ? duration(s.avg_hours_to_fix, t) : '—'}
-          sub={t('stats.avgFixSub', { count: s.fixed_last_90_days })} />
         <Tile label={t('stats.waterLost')} value={`${cubic(s.water_lost_litres_90d)} m³`}
           sub={t('stats.waterLostSub', { rate: cubic(s.water_loss_rate_lpd) })} />
         <Tile label={t('stats.week')} value={formatNumber(s.reports_this_week, i18n.language)}
           sub={t('stats.weekSub', { fixed: s.fixed_this_week })} />
+        <Tile label={t('stats.avgFix')} value={s.fixed_last_90_days ? duration(s.avg_hours_to_fix, t) : '—'}
+          sub={t('stats.avgFixSub', { count: s.fixed_last_90_days })} />
+        <Tile label={t('stats.reviewTile')} value={formatNumber(s.needs_review, i18n.language)}
+          sub={t('stats.openSub', { critical: s.critical_open, review: s.needs_review })} />
       </div>
       <p className="text-xs text-ink-subtle">{t('stats.estimateNote')}</p>
 
-      <section aria-labelledby="zones-title" className="rounded-lg bg-surface p-4">
+      <section aria-labelledby="zones-title" className="rounded-xl border border-surface-line bg-surface p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 id="zones-title" className="font-semibold">{t('stats.perArea')}</h2>
           <div className="flex gap-4 text-sm text-ink-muted" aria-hidden="true">

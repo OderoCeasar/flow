@@ -8,12 +8,14 @@ export function Dialog({
   open,
   onClose,
   title,
+  eyebrow,
   children,
   footer,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  eyebrow?: string;
   children: ReactNode;
   footer?: ReactNode;
 }) {
@@ -34,14 +36,17 @@ export function Dialog({
         onClose();
       }}
       aria-labelledby="dialog-title"
-      className="w-[min(32rem,calc(100vw-2rem))] rounded-xl p-0 text-ink shadow-xl backdrop:bg-black/50"
+      className="w-[min(32rem,calc(100vw-2rem))] rounded-2xl p-0 text-ink shadow-xl backdrop:bg-[#0f2c4a]/40"
     >
       {open && (
         <div className="flex flex-col">
           <div className="flex items-center justify-between gap-2 border-b border-surface-line px-5 py-3">
-            <h2 id="dialog-title" className="text-lg font-semibold">
-              {title}
-            </h2>
+            <div>
+              {eyebrow && <p className="text-xs font-bold uppercase tracking-wider text-brand-700">{eyebrow}</p>}
+              <h2 id="dialog-title" className={eyebrow ? 'text-xl font-normal text-ink-heading' : 'text-lg font-semibold'}>
+                {title}
+              </h2>
+            </div>
             <button
               type="button"
               onClick={onClose}
