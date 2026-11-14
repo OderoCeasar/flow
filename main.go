@@ -36,13 +36,13 @@ func main() {
 	if err != nil {
 		fatal("load config", err)
 	}
-	if err := db_migrator.RunDBMigration(appConfig); err != nil {
-		fatal("run migrations", err)
-	}
-
 	conPool, err := newPool(ctx, appConfig.DBSource)
 	if err != nil {
 		fatal("connect to database", err)
+	}
+	// The PostGIS image restarts once after first-time setup, so retry.
+	if err := retry(ctx, 15, func() error { return db_migrator.RunDBMigration(appConfig) }); err != nil {
+		fatal("run migrations", err)
 	}
 	defer conPool.Close()
 	store := db.NewStore(conPool)
