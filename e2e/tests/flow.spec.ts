@@ -39,15 +39,16 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
     await expect(page.getByRole('button', { name: /Leak location pin/ })).toBeVisible();
     await expectAccessible(page, 'location step');
     await page.getByRole('button', { name: 'Confirm location' }).click();
+    // If someone reported a leak right here, this run treats it as a new one.
+    const sheet = page.getByRole('dialog', { name: /reported a leak/ });
+    if (await sheet.isVisible().catch(() => false)) await sheet.getByRole('button', { name: 'No, this is a different leak' }).click();
 
     // Step 3: details
     await expect(page.getByText('Step 3 of 3')).toBeVisible();
     await page.getByRole('radio', { name: /^Burst pipe/ }).check({ force: true });
     await page.getByRole('radio', { name: 'Gushing', exact: true }).check({ force: true });
-    await page.getByLabel(/Phone number for SMS updates/).fill('0712 345 678');
+    await page.getByLabel('Phone number').fill('712 345 678');
     await expectAccessible(page, 'details step');
-    const different = page.getByRole('button', { name: 'No, this is a different leak' });
-    if (await different.isVisible()) await different.click();
     await page.getByRole('button', { name: 'Send report' }).click();
 
     // Success screen with a reference number and timeline
@@ -158,4 +159,33 @@ test('the citizen app works in Swahili', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Umeona uvujaji\?/ })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'sw');
   await expectAccessible(page, 'home in Swahili');
+});
+
+test('a second reporter is offered the existing report and can still send theirs', async ({ browser, request }) => {
+  const spot = { latitude: -1.2735 - Math.random() * 0.005, longitude: 36.8105 + Math.random() * 0.005 };
+  const first = await request.post('/api/v1/reports', {
+    headers: { Origin: 'http://localhost:8080' },
+    multipart: { lat: String(spot.latitude), lng: String(spot.longitude), leak_type: 'burst_pipe', description: 'Pipe burst by the gate', address_text: 'Muthithi Road, Westlands' },
+  });
+  expect(first.ok()).toBeTruthy();
+  const firstRef = (await first.json()).reference_code as string;
+
+  const context = await browser.newContext({ ...devices['Pixel 5'], geolocation: spot, permissions: ['geolocation'] });
+  const page = await context.newPage();
+  await page.goto('/report');
+  await page.locator('input[type=file][capture]').setInputFiles(PHOTO);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('We found your location.')).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm location' }).click();
+
+  const sheet = page.getByRole('dialog', { name: /Someone reported a leak \d+ m from here/ });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByText('Burst pipe on Muthithi Road')).toBeVisible();
+  await expectAccessible(page, 'duplicate sheet');
+  await sheet.getByRole('button', { name: "Yes, it's the same leak" }).click();
+
+  await expect(page.getByText(new RegExp(`will be added to ${firstRef}`))).toBeVisible();
+  await page.getByRole('button', { name: 'Add my report' }).click();
+  await expect(page.getByRole('heading', { name: 'Added. Thank you!' })).toBeVisible();
+  await context.close();
 });

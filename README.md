@@ -159,6 +159,15 @@ Technicians use the same phone-shaped layout as citizens, with their own **⋯**
 - **Follow-up:** the technician gives a reason, and the job goes to the dispatcher's **Needs review** list. The job keeps its status, so the citizen isn't sent a misleading SMS.
 - **Mark fixed:** take an after photo (compressed on the phone) and add an optional work note, then **Confirm fixed**. A scheduled job is first recorded as started, so the citizen's timeline and the history show both steps. Confirming without a photo asks first.
 
+### "Someone reported a leak near here"
+
+When a citizen taps **Confirm location**, Flow checks for open reports within the duplicate radius (default 50 m). If there is one, a bottom sheet shows it: photo, title, how long ago it was reported, and its status.
+- **Yes, it's the same leak:** the citizen still sends their report. It's added to the existing one, so it raises the priority (more people affected), and they get the same SMS updates.
+- **No, this is a different leak:** the report is new; dispatchers may still see a merge suggestion later.
+- **Changing their mind:** the details step shows which report they're joining, with a link to undo it.
+
+The sheet shows the first reporter's photo, and the privacy note on the form says so.
+
 ### Street address for the pin
 
 The location card shows where the pin is in words, e.g. "Ngong Road, near Prestige Plaza · Kilimani, Nairobi". It also prefills the report's landmark field.

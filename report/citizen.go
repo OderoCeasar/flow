@@ -265,7 +265,12 @@ type NearbyMatch struct {
 	DistanceM     int       `json:"distance_m"`
 	Lat           float64   `json:"lat"`
 	Lng           float64   `json:"lng"`
-	CreatedAt     time.Time `json:"created_at"`
+	AddressText   string    `json:"address_text"`
+	AreaName      string    `json:"area_name"`
+	// The first reporter's photo, so a passer-by can tell if it's the same
+	// leak. The privacy note on the report form says photos may be shown this way.
+	PhotoURL  string    `json:"photo_url,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type NearbyResult struct {
@@ -298,9 +303,16 @@ func (s *Service) Nearby(ctx context.Context, lat, lng float64, leakType string)
 		return res, err
 	}
 	for _, r := range rows {
-		res.Matches = append(res.Matches, NearbyMatch{ClusterID: r.ClusterID, ReferenceCode: r.ReferenceCode,
+		m := NearbyMatch{ClusterID: r.ClusterID, ReferenceCode: r.ReferenceCode,
 			LeakType: r.LeakType, Status: r.Status, ReportCount: r.ReportCount,
-			DistanceM: int(r.DistanceM + 0.5), Lat: r.CentroidLat, Lng: r.CentroidLng, CreatedAt: r.CreatedAt})
+			DistanceM: int(r.DistanceM + 0.5), Lat: r.CentroidLat, Lng: r.CentroidLng,
+			AddressText: r.AddressText, AreaName: r.ZoneName, CreatedAt: r.CreatedAt}
+		if r.PhotoKey != "" {
+			if url, err := s.photos.SignedURL(ctx, r.PhotoKey); err == nil {
+				m.PhotoURL = url
+			}
+		}
+		res.Matches = append(res.Matches, m)
 	}
 	return res, nil
 }

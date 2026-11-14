@@ -52,9 +52,15 @@ SELECT c.id AS cluster_id,
        ST_Distance(c.centroid, ST_SetSRID(ST_MakePoint(@lng::float8, @lat::float8), 4326)::geography)::float8 AS distance_m,
        p.created_at,
        ST_Y(c.centroid::geometry)::float8 AS centroid_lat,
-       ST_X(c.centroid::geometry)::float8 AS centroid_lng
+       ST_X(c.centroid::geometry)::float8 AS centroid_lng,
+       p.address_text,
+       COALESCE(z.name, '')::text AS zone_name,
+       COALESCE((SELECT ph.storage_key FROM report_photos ph
+                 WHERE ph.report_id = p.id AND ph.kind = 'before'
+                 ORDER BY ph.created_at LIMIT 1), '')::text AS photo_key
 FROM clusters c
 JOIN reports p ON p.id = c.primary_report_id
+LEFT JOIN zones z ON z.id = p.zone_id
 WHERE c.status = 'open'
   AND p.status NOT IN ('fixed', 'invalid')
   AND ST_DWithin(c.centroid, ST_SetSRID(ST_MakePoint(@lng::float8, @lat::float8), 4326)::geography, @radius_m::float8)

@@ -17,6 +17,8 @@ export interface Draft {
   description?: string;
   phone?: string;
   joinClusterId?: string;
+  joinRef?: string;
+  smsUpdates?: boolean;
   updatedAt: number;
 }
 

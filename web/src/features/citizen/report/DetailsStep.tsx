@@ -1,26 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState, type ComponentType, type SVGProps } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
-import { ChoiceCards } from '../../../components/ui/ChoiceCards';
-import { Field, TextArea, TextInput } from '../../../components/ui/Field';
+import { TextArea } from '../../../components/ui/Field';
 import { CitizenShell, PageHeading } from '../../../components/ui/Layout';
-import { IconDrop, IconLock, IconWarning, leakTypeIcon } from '../../../components/ui/Icons';
+import { IconCheck, IconLock, IconUsers, IconWarning, leakTypeIcon } from '../../../components/ui/Icons';
 import { ProgressSteps } from '../../../components/ui/ProgressSteps';
 import { Notice } from '../../../components/ui/States';
-import { api, ApiError } from '../../../lib/api';
+import { ApiError } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 import { queueReport } from '../../../lib/drafts';
-import { timeAgo } from '../../../lib/format';
 import { submitReport } from '../../../lib/submit';
-import type { CreateReportResult, Duration, LeakType, NearbyMatch, Size } from '../../../lib/types';
+import type { CreateReportResult, Duration, LeakType, Size } from '../../../lib/types';
 import { useErrorMessage } from '../../../lib/useErrorMessage';
 import { useFlow } from './ReportFlow';
 
+// Accepts what people type after the +254 prefix (712 345 678) or a full number.
 const kenyanPhone = /^(?:\+?254|0)?[17]\d{8}$/;
 
 function makeSchema(t: (k: string) => string, noPhoto: boolean) {
@@ -36,17 +34,73 @@ function makeSchema(t: (k: string) => string, noPhoto: boolean) {
 }
 type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
-// Small drop icons for size, so the choice reads at a glance.
-const SizeIcon = (n: number) =>
-  function Drops(p: { size?: number; className?: string }) {
-    return (
-      <span className={`inline-flex ${p.className ?? ''}`} aria-hidden="true">
-        {Array.from({ length: n }, (_, i) => (
-          <IconDrop key={i} size={(p.size ?? 28) * 0.6} />
-        ))}
-      </span>
-    );
-  };
+const sectionTitle = 'mb-3 font-semibold text-ink';
+const focusRing = 'has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus';
+
+// Leak types as picture tiles, two by two. Native radios underneath keep
+// keyboard and screen-reader behaviour.
+function TileChoices<V extends string>({ legend, options, value, onChange }: {
+  legend: string;
+  options: { value: V; label: string; icon: ComponentType<SVGProps<SVGSVGElement> & { size?: number }> }[];
+  value?: V;
+  onChange: (v: V) => void;
+}) {
+  const name = useId();
+  return (
+    <fieldset>
+      <legend className={sectionTitle}>{legend}</legend>
+      <div className="grid grid-cols-2 gap-3">
+        {options.map((o) => {
+          const checked = value === o.value;
+          return (
+            <label key={o.value}
+              className={`relative flex min-h-[104px] cursor-pointer flex-col justify-between gap-3 rounded-xl border p-3.5 transition-colors motion-reduce:transition-none ${focusRing} ${
+                checked ? 'border-2 border-brand-600 bg-brand-50/70' : 'border-surface-line bg-surface hover:border-brand-300'}`}>
+              <input type="radio" name={name} value={o.value} checked={checked} onChange={() => onChange(o.value)} className="sr-only" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-700" aria-hidden="true">
+                <o.icon size={20} />
+              </span>
+              <span className={`text-sm font-semibold leading-snug ${checked ? 'text-brand-800' : 'text-ink'}`}>{o.label}</span>
+              {checked && (
+                <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white" aria-hidden="true">
+                  <IconCheck size={14} strokeWidth={3} />
+                </span>
+              )}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+// Three short answers side by side.
+function SegmentedChoices<V extends string>({ legend, options, value, onChange }: {
+  legend: string;
+  options: { value: V; label: string }[];
+  value?: V;
+  onChange: (v: V) => void;
+}) {
+  const name = useId();
+  return (
+    <fieldset>
+      <legend className={sectionTitle}>{legend}</legend>
+      <div className="grid grid-cols-3 gap-2.5">
+        {options.map((o) => {
+          const checked = value === o.value;
+          return (
+            <label key={o.value}
+              className={`flex min-h-[52px] cursor-pointer items-center justify-center rounded-xl border px-2 text-center text-sm font-semibold transition-colors motion-reduce:transition-none ${focusRing} ${
+                checked ? 'border-2 border-brand-600 bg-brand-50/70 text-brand-800' : 'border-surface-line bg-surface text-ink hover:border-brand-300'}`}>
+              <input type="radio" name={name} value={o.value} checked={checked} onChange={() => onChange(o.value)} className="sr-only" />
+              {o.label}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
 
 export default function DetailsStep() {
   const { t, i18n } = useTranslation();
@@ -56,7 +110,7 @@ export default function DetailsStep() {
   const { draft, update } = useFlow();
   const [progress, setProgress] = useState<number | null>(null);
   const [submitError, setSubmitError] = useState('');
-  const [dupChoice, setDupChoice] = useState<'join' | 'different' | null>(draft.joinClusterId ? 'join' : null);
+  const sms = draft.smsUpdates ?? true;
 
   const {
     register,
@@ -66,7 +120,7 @@ export default function DetailsStep() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(makeSchema(t, !!draft.noPhoto)),
-    defaultValues: { description: draft.description ?? '', phone: draft.phone ?? user?.phone?.replace('+254', '0') ?? '' },
+    defaultValues: { description: draft.description ?? '', phone: draft.phone ?? user?.phone?.replace(/^\+254/, '') ?? '' },
   });
 
   // Keep the saved draft in step with the form.
@@ -75,17 +129,12 @@ export default function DetailsStep() {
     return () => sub.unsubscribe();
   }, [watch, update]);
 
-  const leakType = draft.leakType && draft.leakType !== 'unsure' ? draft.leakType : '';
-  const nearby = useQuery({
-    queryKey: ['nearby', draft.lat?.toFixed(5), draft.lng?.toFixed(5), leakType],
-    queryFn: () => api<{ covered: boolean; matches: NearbyMatch[] }>(`/reports/nearby?lat=${draft.lat}&lng=${draft.lng}&leak_type=${leakType}`),
-    staleTime: 60_000,
-  });
-  const match = nearby.data?.matches[0];
-
-  const onSubmit = handleSubmit(async () => {
+  const onSubmit = handleSubmit(async (values) => {
     setSubmitError('');
-    const payload = { ...draft, joinClusterId: dupChoice === 'join' ? match?.cluster_id ?? draft.joinClusterId : undefined };
+    // Only send the number if the citizen wants updates.
+    const digits = values.phone.replace(/[\s-]/g, '');
+    const phone = sms && digits ? (/^[17]\d{8}$/.test(digits) ? `+254${digits}` : digits) : undefined;
+    const payload = { ...draft, phone };
     setProgress(0);
     try {
       const res = await submitReport(payload, i18n.language, setProgress);
@@ -107,13 +156,9 @@ export default function DetailsStep() {
   });
 
   const steps = [t('report.steps.photo'), t('report.steps.location'), t('report.steps.details')];
-  const leakOptions = (['burst_pipe', 'pooling', 'dripping', 'sewage', 'unsure'] as const).map((v) => ({
-    value: v,
-    label: t(`report.leakTypes.${v}`),
-    hint: t(`report.leakTypeHints.${v}`),
-    icon: leakTypeIcon[v],
-  }));
   const submitting = progress !== null;
+  const noteError = errors.description?.message;
+  const phoneError = errors.phone?.message;
 
   return (
     <CitizenShell
@@ -122,16 +167,14 @@ export default function DetailsStep() {
         <>
           {submitting && (
             <div role="status" className="flex flex-col gap-1">
-              <span className="text-sm font-medium">
-                {progress! < 100 ? t('report.uploading', { pct: progress }) : t('report.submitting')}
-              </span>
+              <span className="text-sm font-medium">{progress! < 100 ? t('report.uploading', { pct: progress }) : t('report.submitting')}</span>
               <span className="h-2 overflow-hidden rounded-full bg-surface-sunken" aria-hidden="true">
                 <span className="block h-full bg-brand-600 transition-[width] motion-reduce:transition-none" style={{ width: `${progress}%` }} />
               </span>
             </div>
           )}
           <Button size="lg" block onClick={() => void onSubmit()} loading={submitting}>
-            {dupChoice === 'join' ? t('report.duplicate.submitJoin') : t('report.submit')}
+            {draft.joinClusterId ? t('report.duplicate.submitJoin') : t('report.submit')}
           </Button>
         </>
       }
@@ -139,105 +182,88 @@ export default function DetailsStep() {
       <ProgressSteps step={3} total={3} labels={steps} />
       <PageHeading title={t('report.details.title')} lead={t('report.details.lead')} />
 
-      <form className="flex flex-col gap-6" onSubmit={(e) => void onSubmit(e)} noValidate>
-        <ChoiceCards<LeakType | 'unsure'>
+      {draft.joinClusterId && (
+        <div className="flex items-start gap-3 rounded-xl bg-[#fdf6e7] p-4" role="status">
+          <IconUsers size={20} className="mt-0.5 shrink-0 text-[#9a5a06]" />
+          <div className="flex flex-1 flex-col items-start gap-1">
+            <p className="text-sm text-ink">{t('report.duplicate.willJoin', { ref: draft.joinRef ?? '' })}</p>
+            <button type="button" onClick={() => update({ joinClusterId: undefined, joinRef: undefined })}
+              className="min-h-[36px] rounded text-sm font-semibold text-brand-700 hover:underline focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
+              {t('report.duplicate.different')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <form className="flex flex-col gap-7" onSubmit={(e) => void onSubmit(e)} noValidate>
+        <TileChoices<LeakType>
           legend={t('report.details.leakType')}
-          optional
-          optionalLabel={t('common.optional')}
-          options={leakOptions}
-          value={draft.leakType}
+          options={(['burst_pipe', 'dripping', 'pooling', 'sewage'] as const).map((v) => ({ value: v, label: t(`report.leakTypes.${v}`), icon: leakTypeIcon[v] }))}
+          value={draft.leakType === 'unsure' ? undefined : draft.leakType}
           onChange={(v) => update({ leakType: v })}
-          columns={1}
         />
-
-        {match && dupChoice !== 'different' && (
-          <section aria-labelledby="dup-title" className="flex flex-col gap-3 rounded-xl border border-warning-800/30 bg-warning-50 p-4">
-            <h3 id="dup-title" className="flex items-center gap-2 font-semibold text-warning-800">
-              <IconWarning size={20} />
-              {t('report.duplicate.title')}
-            </h3>
-            <p className="text-ink">
-              {t('report.duplicate.body', {
-                count: match.report_count,
-                distance: match.distance_m,
-                when: timeAgo(match.created_at, t),
-                type: t(`leakType.${match.leak_type ?? 'unknown'}`),
-              })}
-            </p>
-            {dupChoice === 'join' ? (
-              <p className="font-medium text-success-700" role="status">
-                {t('report.duplicate.willJoin', { ref: match.reference_code })}
-              </p>
-            ) : (
-              <p className="text-sm text-ink-muted">{t('report.duplicate.why')}</p>
-            )}
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button variant={dupChoice === 'join' ? 'primary' : 'secondary'} aria-pressed={dupChoice === 'join'} onClick={() => setDupChoice('join')}>
-                {t('report.duplicate.add')}
-              </Button>
-              <Button variant="outline" onClick={() => setDupChoice('different')}>
-                {t('report.duplicate.different')}
-              </Button>
-            </div>
-          </section>
-        )}
-
-        <ChoiceCards<Size>
+        <SegmentedChoices<Size>
           legend={t('report.details.size')}
-          optional
-          optionalLabel={t('common.optional')}
-          options={(['small', 'medium', 'large'] as const).map((v, i) => ({ value: v, label: t(`report.sizes.${v}`), icon: SizeIcon(i + 1) }))}
+          options={(['small', 'medium', 'large'] as const).map((v) => ({ value: v, label: t(`report.sizes.${v}`) }))}
           value={draft.size}
           onChange={(v) => update({ size: v })}
-          columns={3}
         />
-
-        <ChoiceCards<Duration>
+        <SegmentedChoices<Duration>
           legend={t('report.details.duration')}
-          optional
-          optionalLabel={t('common.optional')}
           options={(['today', 'days', 'week'] as const).map((v) => ({ value: v, label: t(`report.durations.${v}`) }))}
           value={draft.duration}
           onChange={(v) => update({ duration: v })}
-          columns={3}
         />
 
-        <Field
-          label={t('report.details.description')}
-          hint={draft.noPhoto ? t('report.details.descriptionHintNoPhoto') : t('report.details.descriptionHint')}
-          optional={!draft.noPhoto}
-          error={errors.description?.message}
-        >
-          {({ id, describedBy, invalid }) => (
-            <TextArea id={id} aria-describedby={describedBy} invalid={invalid} rows={3} maxLength={1000} {...register('description')} />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <label htmlFor="note" className="font-semibold text-ink">{t('report.details.description')}</label>
+            <span className="text-sm text-ink-muted">{draft.noPhoto ? t('report.details.required') : t('common.optionalCap')}</span>
+          </div>
+          {draft.noPhoto && <p id="note-hint" className="text-sm text-ink-muted">{t('report.details.descriptionHintNoPhoto')}</p>}
+          <TextArea id="note" rows={3} maxLength={1000} placeholder={t('report.details.notePlaceholder')} invalid={!!noteError}
+            aria-describedby={[noteError ? 'note-err' : '', draft.noPhoto ? 'note-hint' : ''].filter(Boolean).join(' ') || undefined}
+            {...register('description')} />
+          {noteError && (
+            <p id="note-err" role="alert" className="flex items-start gap-1.5 text-sm font-medium text-danger-700">
+              <IconWarning size={16} className="mt-0.5 shrink-0" /> {noteError}
+            </p>
           )}
-        </Field>
+        </div>
 
-        <Field label={t('report.details.phone')} hint={t('report.details.phoneHint')} optional error={errors.phone?.message}>
-          {({ id, describedBy, invalid }) => (
-            <TextInput
-              id={id}
-              aria-describedby={describedBy}
-              invalid={invalid}
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="0712 345 678"
-              {...register('phone')}
-            />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <label htmlFor="phone" className="font-semibold text-ink">{t('report.details.phone')}</label>
+            <span className="text-sm text-ink-muted">{t('common.optionalCap')}</span>
+          </div>
+          <div className={`flex min-h-touch items-center rounded border-2 bg-surface focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-200 ${
+            phoneError ? 'border-danger-600' : 'border-surface-line'}`}>
+            <span className="border-r border-surface-line px-3 font-semibold text-ink" aria-hidden="true">+254</span>
+            <input id="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="712 345 678"
+              aria-invalid={!!phoneError || undefined} aria-describedby={phoneError ? 'phone-err sms-hint' : 'sms-hint'}
+              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-base text-ink placeholder:text-ink-subtle focus:outline-none"
+              {...register('phone')} />
+          </div>
+          {phoneError && (
+            <p id="phone-err" role="alert" className="flex items-start gap-1.5 text-sm font-medium text-danger-700">
+              <IconWarning size={16} className="mt-0.5 shrink-0" /> {phoneError}
+            </p>
           )}
-        </Field>
+          <label className="mt-1 flex cursor-pointer items-start gap-3">
+            <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-brand-600" checked={sms} onChange={(e) => update({ smsUpdates: e.target.checked })} />
+            <span className="flex flex-col">
+              <span className="font-semibold text-ink">{t('report.details.smsUpdates')}</span>
+              <span id="sms-hint" className="text-sm text-ink-muted">{t('report.details.smsHint')}</span>
+            </span>
+          </label>
+        </div>
 
         <Notice>
           <IconLock size={18} className="mt-0.5 shrink-0" />
           <span>{t('report.details.privacy')}</span>
         </Notice>
 
-        {submitError && (
-          <p role="alert" className="font-medium text-danger-700">
-            {submitError}
-          </p>
-        )}
+        {submitError && <p role="alert" className="font-medium text-danger-700">{submitError}</p>}
       </form>
     </CitizenShell>
   );

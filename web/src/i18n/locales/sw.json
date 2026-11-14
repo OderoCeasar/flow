@@ -20,7 +20,8 @@
     "save": "Hifadhi",
     "remove": "Ondoa",
     "retry": "Jaribu tena",
-    "undo": "Tendua"
+    "undo": "Tendua",
+    "optionalCap": "Si lazima"
   },
   "time": {
     "justNow": "sasa hivi",
@@ -171,24 +172,28 @@
       "otherReport": "Imesharipotiwa: {{type}}"
     },
     "details": {
-      "title": "Maelezo machache",
-      "lead": "Hapa hakuna lazima, lakini inasaidia timu.",
-      "leakType": "Unaona nini?",
-      "size": "Maji ni mengi kiasi gani?",
-      "duration": "Imekuwa ikivuja kwa muda gani?",
+      "title": "Tueleze unachokiona",
+      "lead": "Jibu unachoweza. Kila swali hapa si lazima.",
+      "leakType": "Ni uvujaji wa aina gani?",
+      "size": "Ni mkubwa kiasi gani?",
+      "duration": "Umekuwepo kwa muda gani?",
       "description": "Kuna jingine?",
       "descriptionHint": "Kwa mfano: maji yanajaa barabarani.",
       "descriptionHintNoPhoto": "Kwa kuwa hakuna picha, tafadhali eleza unachokiona.",
       "descriptionRequired": "Eleza uvujaji kwa maneno machache, kwa kuwa hakuna picha.",
       "descriptionTooLong": "Tumia herufi chini ya 1000.",
-      "phone": "Nambari ya simu ya kupokea SMS",
+      "phone": "Nambari ya simu",
       "phoneHint": "Tutakutumia SMS hali ikibadilika. Acha wazi kama hutaki taarifa.",
-      "phoneInvalid": "Weka nambari ya simu ya Kenya, kama 0712 345 678.",
-      "privacy": "Picha yako na mahali halisi hutumwa kwa kampuni ya maji. Tunaondoa taarifa nyingine zilizofichwa kwenye picha, kama aina ya kamera na saa ilipopigwa."
+      "phoneInvalid": "Weka nambari ya simu ya Kenya, kama 712 345 678.",
+      "privacy": "Picha yako na mahali halisi hutumwa kwa kampuni ya maji, na picha yako inaweza kuonyeshwa kwa watu wanaoripoti uvujaji huo huo karibu. Tunaondoa taarifa zilizofichwa kwenye picha, kama aina ya kamera na saa ilipopigwa.",
+      "required": "Inahitajika",
+      "notePlaceholder": "Ongeza maelezo mafupi",
+      "smsUpdates": "Pata taarifa kwa SMS",
+      "smsHint": "Tunatumia nambari yako kwa ripoti hii tu."
     },
     "leakTypes": {
       "burst_pipe": "Bomba limepasuka",
-      "pooling": "Maji yamesimama",
+      "pooling": "Maji yamesimama ardhini",
       "dripping": "Mfereji au mita inavuja",
       "sewage": "Maji taka",
       "unsure": "Sina uhakika"
@@ -201,14 +206,14 @@
       "unsure": "Timu itakagua"
     },
     "sizes": {
-      "small": "Kidogo",
+      "small": "Matone kidogo",
       "medium": "Yanatiririka",
       "large": "Mengi sana"
     },
     "durations": {
       "today": "Leo",
       "days": "Siku chache",
-      "week": "Wiki moja au zaidi"
+      "week": "Zaidi ya wiki"
     },
     "duplicate": {
       "title": "Wengine wameripoti uvujaji karibu na hapa",
@@ -217,8 +222,16 @@
       "why": "Kama ni uvujaji ule ule, kuongeza ripoti yako kunasaidia urekebishwe mapema.",
       "add": "Ongeza ripoti yangu hapo",
       "different": "Hapana, huu ni uvujaji mwingine",
-      "willJoin": "Ripoti na picha yako zitaongezwa kwenye {{ref}}.",
-      "submitJoin": "Ongeza ripoti yangu"
+      "willJoin": "Ripoti na picha yako zitaongezwa kwenye {{ref}}, ripoti iliyopo ya uvujaji huu.",
+      "submitJoin": "Ongeza ripoti yangu",
+      "eyebrow": "Huenda ni ule ule",
+      "sheetTitle": "Mtu ameripoti uvujaji mita {{distance}} kutoka hapa",
+      "reportedAgo": "Iliripotiwa {{when}}",
+      "people_one": "Ripoti {{count}}",
+      "people_other": "Ripoti {{count}}",
+      "question": "Je, ni uvujaji ule ule? Kuthibitisha kunasaidia timu kuona watu wangapi wameathirika. Bado utatuma ripoti yako na kupata taarifa.",
+      "yesSame": "Ndiyo, ni uvujaji ule ule",
+      "photoAlt": "Picha ya {{type}} ambayo mtu ameshairipoti"
     },
     "done": {
       "title": "Ripoti imetumwa. Asante!",

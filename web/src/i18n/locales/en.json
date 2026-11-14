@@ -20,7 +20,8 @@
     "save": "Save",
     "remove": "Remove",
     "retry": "Try again",
-    "undo": "Undo"
+    "undo": "Undo",
+    "optionalCap": "Optional"
   },
   "time": {
     "justNow": "just now",
@@ -171,24 +172,28 @@
       "otherReport": "Already reported: {{type}}"
     },
     "details": {
-      "title": "A few quick details",
-      "lead": "Everything here is optional, but it helps the crew.",
-      "leakType": "What do you see?",
-      "size": "How much water?",
-      "duration": "How long has it been leaking?",
+      "title": "Tell us what you see",
+      "lead": "Answer what you can. Every question here is optional.",
+      "leakType": "What kind of leak is it?",
+      "size": "How big is it?",
+      "duration": "How long has it been there?",
       "description": "Anything else?",
       "descriptionHint": "For example: water is flooding the road.",
       "descriptionHintNoPhoto": "As there's no photo, please describe what you see.",
       "descriptionRequired": "Describe the leak in a few words, as there's no photo.",
       "descriptionTooLong": "Keep this under 1000 characters.",
-      "phone": "Phone number for SMS updates",
+      "phone": "Phone number",
       "phoneHint": "We'll text you when the status changes. Leave empty if you don't want updates.",
-      "phoneInvalid": "Enter a Kenyan mobile number, like 0712 345 678.",
-      "privacy": "Your photo and the exact location go to the water utility. We remove other hidden information from the photo, like the camera model and time it was taken."
+      "phoneInvalid": "Enter a Kenyan mobile number, like 712 345 678.",
+      "privacy": "Your photo and the exact location go to the water utility, and your photo may be shown to people reporting the same leak nearby. We remove hidden information from photos, like the camera model and the time it was taken.",
+      "required": "Needed",
+      "notePlaceholder": "Add a short note",
+      "smsUpdates": "Get SMS updates",
+      "smsHint": "We only use your number for this report."
     },
     "leakTypes": {
       "burst_pipe": "Burst pipe",
-      "pooling": "Water pooling",
+      "pooling": "Water pooling on the ground",
       "dripping": "Dripping tap or meter",
       "sewage": "Sewage",
       "unsure": "Not sure"
@@ -201,14 +206,14 @@
       "unsure": "The crew will check"
     },
     "sizes": {
-      "small": "Trickle",
+      "small": "Small drip",
       "medium": "Steady flow",
       "large": "Gushing"
     },
     "durations": {
       "today": "Today",
       "days": "A few days",
-      "week": "A week or more"
+      "week": "Over a week"
     },
     "duplicate": {
       "title": "Others have reported a leak near here",
@@ -217,8 +222,16 @@
       "why": "If it's the same leak, adding your report helps it get fixed sooner.",
       "add": "Add my report to it",
       "different": "No, this is a different leak",
-      "willJoin": "Your report and photo will be added to {{ref}}.",
-      "submitJoin": "Add my report"
+      "willJoin": "Your report and photo will be added to {{ref}}, the existing report of this leak.",
+      "submitJoin": "Add my report",
+      "eyebrow": "Possible match",
+      "sheetTitle": "Someone reported a leak {{distance}} m from here",
+      "reportedAgo": "Reported {{when}}",
+      "people_one": "{{count}} report",
+      "people_other": "{{count}} reports",
+      "question": "Is this the same leak? Confirming helps the team see how many people are affected. You'll still send your report and get updates.",
+      "yesSame": "Yes, it's the same leak",
+      "photoAlt": "Photo of the {{type}} someone already reported"
     },
     "done": {
       "title": "Report sent. Thank you!",

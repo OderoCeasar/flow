@@ -12,6 +12,7 @@ import { api } from '../../../lib/api';
 import type { NearbyMatch } from '../../../lib/types';
 import { NAIROBI_CENTER } from './constants';
 import { useFlow } from './ReportFlow';
+import { DuplicateSheet } from './DuplicateSheet';
 
 const LocationPicker = lazy(() => import('../../../components/map/LocationPicker'));
 
@@ -90,10 +91,19 @@ export default function LocationStep() {
   const outside = coverage.data && !coverage.data.covered;
   const { line1, line2 } = lines(address.data);
 
-  const confirm = () => {
+  const [sheet, setSheet] = useState<NearbyMatch | null>(null);
+  const goOn = (join?: NearbyMatch) => {
+    setSheet(null);
     // Keep what the citizen typed; otherwise save the looked-up address for the crew.
-    if (!draft.addressText?.trim() && line1) update({ addressText: [line1, address.data?.area].filter(Boolean).join(', ') });
+    const addressText = draft.addressText?.trim() ? draft.addressText : [line1, address.data?.area].filter(Boolean).join(', ');
+    update({ addressText, joinClusterId: join?.cluster_id, joinRef: join?.reference_code });
     nav('/report/details');
+  };
+  const confirm = () => {
+    // Someone already reported a leak right here: ask before making a new one.
+    const nearest = coverage.data?.matches[0];
+    if (nearest) setSheet(nearest);
+    else goOn();
   };
 
   const steps = [t('report.steps.photo'), t('report.steps.location'), t('report.steps.details')];
@@ -195,6 +205,7 @@ export default function LocationStep() {
         )}
       </div>
       </div>
+      <DuplicateSheet match={sheet} onSame={(m) => goOn(m)} onDifferent={() => goOn()} onClose={() => setSheet(null)} />
     </CitizenShell>
   );
 }

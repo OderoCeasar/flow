@@ -138,6 +138,9 @@ export interface NearbyMatch {
   distance_m: number;
   lat: number;
   lng: number;
+  address_text: string;
+  area_name: string;
+  photo_url?: string;
   created_at: string;
 }
 
