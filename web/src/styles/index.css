@@ -41,6 +41,12 @@
 .leaflet-container {
   font: inherit;
 }
-.leaflet-control-attribution a {
+.leaflet-container .leaflet-control-attribution a {
   color: theme('colors.brand.700');
+  text-decoration: underline;
+}
+
+/* Calmer map tiles for the citizen location step (OpenStreetMap is busy at street level). */
+.flow-map-soft .leaflet-tile {
+  filter: saturate(0.35) brightness(1.06) contrast(0.92);
 }

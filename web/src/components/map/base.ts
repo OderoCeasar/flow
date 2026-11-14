@@ -8,9 +8,9 @@ export const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/c
 // A pin drawn in SVG, so no image files are needed and it scales cleanly.
 export const pinIcon = L.divIcon({
   className: 'flow-pin',
-  html: `<svg width="40" height="52" viewBox="0 0 40 52" aria-hidden="true"><path d="M20 51S3 33 3 19a17 17 0 0 1 34 0c0 14-17 32-17 32z" fill="#0b5cad" stroke="#fff" stroke-width="3"/><circle cx="20" cy="19" r="7" fill="#fff"/></svg>`,
-  iconSize: [40, 52],
-  iconAnchor: [20, 50],
+  html: `<svg width="44" height="54" viewBox="0 0 44 54" aria-hidden="true"><path d="M22 52S4 34 4 21a18 18 0 0 1 36 0c0 13-18 31-18 31z" fill="#0b5cad" stroke="#fff" stroke-width="3.5" style="filter:drop-shadow(0 3px 4px rgba(15,44,74,.35))"/><path d="M22 13.5a7 7 0 0 0-7 7c0 4.6 7 10.5 7 10.5s7-5.9 7-10.5a7 7 0 0 0-7-7z" fill="none" stroke="#fff" stroke-width="2"/><circle cx="22" cy="20.5" r="2.4" fill="#fff"/></svg>`,
+  iconSize: [44, 54],
+  iconAnchor: [22, 52],
 });
 
 // The dark shade of each severity, so the white number stays above 4.5:1.

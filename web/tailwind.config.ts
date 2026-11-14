@@ -12,7 +12,7 @@ export default {
       fontSize: fontSize as unknown as Record<string, [string, { lineHeight: string }]>,
       borderRadius: radius,
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Noto Sans', 'sans-serif'],
+        sans: ['"Inter Variable"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Noto Sans', 'sans-serif'],
       },
     },
   },

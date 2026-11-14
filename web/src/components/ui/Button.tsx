@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
 type Size = 'md' | 'lg' | 'sm';
 
 const base =
@@ -10,8 +10,9 @@ const base =
   'disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-ink-inverse hover:bg-brand-700 active:bg-brand-800',
+  primary: 'bg-brand-600 text-ink-inverse shadow-sm hover:bg-brand-700 active:bg-brand-800',
   secondary: 'bg-surface text-brand-700 border-2 border-brand-600 hover:bg-brand-50',
+  outline: 'bg-surface text-brand-700 border border-brand-200 hover:bg-brand-50',
   danger: 'bg-danger-600 text-ink-inverse hover:bg-danger-700',
   ghost: 'bg-transparent text-brand-700 hover:bg-brand-50',
 };

@@ -50,7 +50,9 @@ SELECT c.id AS cluster_id,
        p.status,
        c.report_count,
        ST_Distance(c.centroid, ST_SetSRID(ST_MakePoint(@lng::float8, @lat::float8), 4326)::geography)::float8 AS distance_m,
-       p.created_at
+       p.created_at,
+       ST_Y(c.centroid::geometry)::float8 AS centroid_lat,
+       ST_X(c.centroid::geometry)::float8 AS centroid_lng
 FROM clusters c
 JOIN reports p ON p.id = c.primary_report_id
 WHERE c.status = 'open'

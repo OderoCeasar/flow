@@ -77,7 +77,9 @@ SELECT c.id AS cluster_id,
        p.status,
        c.report_count,
        ST_Distance(c.centroid, ST_SetSRID(ST_MakePoint($1::float8, $2::float8), 4326)::geography)::float8 AS distance_m,
-       p.created_at
+       p.created_at,
+       ST_Y(c.centroid::geometry)::float8 AS centroid_lat,
+       ST_X(c.centroid::geometry)::float8 AS centroid_lng
 FROM clusters c
 JOIN reports p ON p.id = c.primary_report_id
 WHERE c.status = 'open'
@@ -111,6 +113,8 @@ type ListNearbyOpenClustersRow struct {
 	ReportCount     int32     `json:"report_count"`
 	DistanceM       float64   `json:"distance_m"`
 	CreatedAt       time.Time `json:"created_at"`
+	CentroidLat     float64   `json:"centroid_lat"`
+	CentroidLng     float64   `json:"centroid_lng"`
 }
 
 // Open groups whose centre is within the radius, active since the cutoff, with
@@ -142,6 +146,8 @@ func (q *Queries) ListNearbyOpenClusters(ctx context.Context, arg ListNearbyOpen
 			&i.ReportCount,
 			&i.DistanceM,
 			&i.CreatedAt,
+			&i.CentroidLat,
+			&i.CentroidLng,
 		); err != nil {
 			return nil, err
 		}

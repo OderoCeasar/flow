@@ -263,6 +263,8 @@ type NearbyMatch struct {
 	Status        string    `json:"status"`
 	ReportCount   int32     `json:"report_count"`
 	DistanceM     int       `json:"distance_m"`
+	Lat           float64   `json:"lat"`
+	Lng           float64   `json:"lng"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 
@@ -298,7 +300,7 @@ func (s *Service) Nearby(ctx context.Context, lat, lng float64, leakType string)
 	for _, r := range rows {
 		res.Matches = append(res.Matches, NearbyMatch{ClusterID: r.ClusterID, ReferenceCode: r.ReferenceCode,
 			LeakType: r.LeakType, Status: r.Status, ReportCount: r.ReportCount,
-			DistanceM: int(r.DistanceM + 0.5), CreatedAt: r.CreatedAt})
+			DistanceM: int(r.DistanceM + 0.5), Lat: r.CentroidLat, Lng: r.CentroidLng, CreatedAt: r.CreatedAt})
 	}
 	return res, nil
 }
@@ -321,8 +323,17 @@ type PublicStatus struct {
 	InvalidReason   string        `json:"invalid_reason,omitempty"`
 	TypicalFixHours int           `json:"typical_fix_hours"`
 	Events          []PublicEvent `json:"events"`
-	CreatedAt       time.Time     `json:"created_at"`
-	UpdatedAt       time.Time     `json:"updated_at"`
+	// The reporter's own photo and the technician's after-repair photo.
+	Photos []PublicPhoto `json:"photos"`
+	// The reporter's answer to "Was it fixed properly?": fixed, not_fixed or empty.
+	Feedback  string    `json:"feedback,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type PublicPhoto struct {
+	Kind string `json:"kind"`
+	URL  string `json:"url"`
 }
 
 func (s *Service) PublicStatus(ctx context.Context, ref string) (PublicStatus, error) {
@@ -342,6 +353,7 @@ func (s *Service) PublicStatus(ctx context.Context, ref string) (PublicStatus, e
 		ReferenceCode: r.ReferenceCode, Status: r.Status, LeakType: r.LeakType, AreaName: r.ZoneName,
 		AddressText: r.AddressText, OthersReported: r.DuplicateCount, InvalidReason: r.InvalidReason,
 		TypicalFixHours: s.typicalFixHours(ctx, r.UtilityID, r.Severity), Events: []PublicEvent{},
+		Photos: s.publicPhotos(ctx, r), Feedback: deref(r.CitizenFeedback),
 		CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
 	for _, e := range events {
@@ -352,6 +364,86 @@ func (s *Service) PublicStatus(ctx context.Context, ref string) (PublicStatus, e
 		out.Events = append(out.Events, pe)
 	}
 	return out, nil
+}
+
+// publicPhotos returns at most one "before" photo (this reporter's own) and
+// the latest "after" photo for the group, which the technician uploads to the
+// group's main report. Photos from other reporters are never shown.
+func (s *Service) publicPhotos(ctx context.Context, r db.ReportView) []PublicPhoto {
+	ids := []uuid.UUID{r.ID}
+	if primary, err := s.primaryOf(ctx, s.store, r); err == nil && primary.ID != r.ID {
+		ids = append(ids, primary.ID)
+	}
+	rows, err := s.store.ListPhotosForReports(ctx, ids)
+	if err != nil {
+		slog.ErrorContext(ctx, "load public photos", "err", err)
+		return []PublicPhoto{}
+	}
+	var before, after *db.ReportPhoto
+	for i := range rows {
+		p := &rows[i]
+		switch {
+		case p.Kind == "before" && p.ReportID == r.ID && before == nil:
+			before = p
+		case p.Kind == "after":
+			after = p // rows are oldest first, so this keeps the latest
+		}
+	}
+	out := []PublicPhoto{}
+	for _, p := range []*db.ReportPhoto{before, after} {
+		if p == nil {
+			continue
+		}
+		url, err := s.photos.SignedURL(ctx, p.StorageKey)
+		if err != nil {
+			slog.ErrorContext(ctx, "sign photo url", "photo_id", p.ID, "err", err)
+			continue
+		}
+		out = append(out, PublicPhoto{Kind: p.Kind, URL: url})
+	}
+	return out
+}
+
+// Feedback records the reporter's answer to "Was it fixed properly?". A "no"
+// sends the group back to dispatchers for review; it doesn't reopen the leak
+// by itself, so a dispatcher decides what happens next.
+func (s *Service) Feedback(ctx context.Context, ref string, fixed bool) (PublicStatus, error) {
+	r, err := s.store.GetReportByRef(ctx, strings.TrimSpace(ref))
+	if err != nil {
+		if db.IsNotFound(err) {
+			return PublicStatus{}, apperr.New(http.StatusNotFound, "report_not_found",
+				"We couldn't find a report with that number. Check it and try again.")
+		}
+		return PublicStatus{}, err
+	}
+	if r.Status != StatusFixed {
+		return PublicStatus{}, apperr.Conflict("feedback_not_allowed", "You can answer this once the leak is marked Fixed.")
+	}
+	answer := "fixed"
+	if !fixed {
+		answer = "not_fixed"
+	}
+	err = s.store.ExecTx(ctx, func(q db.Querier) error {
+		if err := q.SetCitizenFeedback(ctx, db.SetCitizenFeedbackParams{ID: r.ID, Feedback: &answer}); err != nil {
+			return err
+		}
+		primary, err := s.primaryOf(ctx, q, r)
+		if err != nil {
+			return err
+		}
+		if !fixed {
+			if err := q.FlagReportForReview(ctx, db.FlagReportForReviewParams{ID: primary.ID,
+				ReviewReason: fmt.Sprintf("The reporter of %s says the leak is not fixed yet.", r.ReferenceCode)}); err != nil {
+				return err
+			}
+		}
+		return q.CreateAuditEntry(ctx, db.CreateAuditEntryParams{ReportID: primary.ID, Action: "citizen_feedback",
+			Details: mustJSON(map[string]any{"reference_code": r.ReferenceCode, "answer": answer})})
+	})
+	if err != nil {
+		return PublicStatus{}, err
+	}
+	return s.PublicStatus(ctx, r.ReferenceCode)
 }
 
 // MyReports lists a citizen's reports, including ones made before signing in

@@ -71,7 +71,8 @@ describe('Timeline', () => {
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(5);
     expect(items[2]).toHaveAttribute('aria-current', 'step');
-    expect(screen.getByText('The leak is repaired')).toBeInTheDocument();
+    expect(screen.getAllByText('Waiting')).toHaveLength(2);
+    expect(screen.getByText('Current status')).toBeInTheDocument();
   });
 
   it('explains a report that was not a leak', () => {

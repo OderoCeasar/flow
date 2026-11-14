@@ -252,6 +252,21 @@ func (q *Queries) DeactivateAssignments(ctx context.Context, reportID uuid.UUID)
 	return err
 }
 
+const flagReportForReview = `-- name: FlagReportForReview :exec
+UPDATE reports SET needs_review = true, review_reason = $1, updated_at = now()
+WHERE id = $2
+`
+
+type FlagReportForReviewParams struct {
+	ReviewReason string    `json:"review_reason"`
+	ID           uuid.UUID `json:"id"`
+}
+
+func (q *Queries) FlagReportForReview(ctx context.Context, arg FlagReportForReviewParams) error {
+	_, err := q.db.Exec(ctx, flagReportForReview, arg.ReviewReason, arg.ID)
+	return err
+}
+
 const getActiveAssignment = `-- name: GetActiveAssignment :one
 SELECT id, report_id, technician_id, assigned_by, due_at, active, created_at FROM assignments WHERE report_id = $1 AND active
 `
@@ -300,7 +315,7 @@ func (q *Queries) GetNearestSensitiveSite(ctx context.Context, arg GetNearestSen
 }
 
 const getReport = `-- name: GetReport :one
-SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank FROM report_view WHERE id = $1
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view WHERE id = $1
 `
 
 func (q *Queries) GetReport(ctx context.Context, id uuid.UUID) (ReportView, error) {
@@ -347,12 +362,14 @@ func (q *Queries) GetReport(ctx context.Context, id uuid.UUID) (ReportView, erro
 		&i.AssigneeName,
 		&i.AssigneeDueAt,
 		&i.SeverityRank,
+		&i.CitizenFeedback,
+		&i.CitizenFeedbackAt,
 	)
 	return i, err
 }
 
 const getReportByRef = `-- name: GetReportByRef :one
-SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank FROM report_view WHERE reference_code = upper($1::text)
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view WHERE reference_code = upper($1::text)
 `
 
 func (q *Queries) GetReportByRef(ctx context.Context, referenceCode string) (ReportView, error) {
@@ -399,6 +416,8 @@ func (q *Queries) GetReportByRef(ctx context.Context, referenceCode string) (Rep
 		&i.AssigneeName,
 		&i.AssigneeDueAt,
 		&i.SeverityRank,
+		&i.CitizenFeedback,
+		&i.CitizenFeedbackAt,
 	)
 	return i, err
 }
@@ -469,7 +488,7 @@ func (q *Queries) ListAuditEntries(ctx context.Context, reportID uuid.UUID) ([]L
 }
 
 const listJobsForTechnician = `-- name: ListJobsForTechnician :many
-SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank FROM report_view
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view
 WHERE assignee_id = $1::uuid
   AND (CASE WHEN $2::bool THEN status <> 'invalid'
             ELSE status IN ('verified', 'scheduled', 'in_progress') END)
@@ -531,6 +550,8 @@ func (q *Queries) ListJobsForTechnician(ctx context.Context, arg ListJobsForTech
 			&i.AssigneeName,
 			&i.AssigneeDueAt,
 			&i.SeverityRank,
+			&i.CitizenFeedback,
+			&i.CitizenFeedbackAt,
 		); err != nil {
 			return nil, err
 		}
@@ -601,7 +622,7 @@ func (q *Queries) ListPhotosForReports(ctx context.Context, reportIds []uuid.UUI
 }
 
 const listPrimaryReports = `-- name: ListPrimaryReports :many
-SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank FROM report_view
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view
 WHERE is_primary
   AND ($1::uuid IS NULL OR utility_id = $1)
   AND ($2::text[] IS NULL OR status = ANY($2::text[]))
@@ -713,6 +734,8 @@ func (q *Queries) ListPrimaryReports(ctx context.Context, arg ListPrimaryReports
 			&i.AssigneeName,
 			&i.AssigneeDueAt,
 			&i.SeverityRank,
+			&i.CitizenFeedback,
+			&i.CitizenFeedbackAt,
 		); err != nil {
 			return nil, err
 		}
@@ -725,7 +748,7 @@ func (q *Queries) ListPrimaryReports(ctx context.Context, arg ListPrimaryReports
 }
 
 const listReportsForReporter = `-- name: ListReportsForReporter :many
-SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank FROM report_view
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view
 WHERE reporter_id = $1::uuid OR ($2::text <> '' AND reporter_phone = $2)
 ORDER BY created_at DESC
 LIMIT 100
@@ -786,6 +809,8 @@ func (q *Queries) ListReportsForReporter(ctx context.Context, arg ListReportsFor
 			&i.AssigneeName,
 			&i.AssigneeDueAt,
 			&i.SeverityRank,
+			&i.CitizenFeedback,
+			&i.CitizenFeedbackAt,
 		); err != nil {
 			return nil, err
 		}
@@ -798,7 +823,7 @@ func (q *Queries) ListReportsForReporter(ctx context.Context, arg ListReportsFor
 }
 
 const listReportsInCluster = `-- name: ListReportsInCluster :many
-SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank FROM report_view WHERE cluster_id = $1::uuid ORDER BY created_at
+SELECT id, reference_code, reporter_id, reporter_phone, locale, lat, lng, address_text, description, leak_type, size_estimate, duration, is_main, status, severity, severity_source, severity_reason, priority_score, priority_breakdown, priority_override, priority_override_reason, ai_text, needs_review, review_reason, invalid_reason, cluster_id, suggested_cluster_id, utility_id, zone_id, zone_name, analyzed_at, fixed_at, created_at, updated_at, duplicate_count, is_primary, assignee_id, assignee_name, assignee_due_at, severity_rank, citizen_feedback, citizen_feedback_at FROM report_view WHERE cluster_id = $1::uuid ORDER BY created_at
 `
 
 func (q *Queries) ListReportsInCluster(ctx context.Context, clusterID uuid.UUID) ([]ReportView, error) {
@@ -851,6 +876,8 @@ func (q *Queries) ListReportsInCluster(ctx context.Context, clusterID uuid.UUID)
 			&i.AssigneeName,
 			&i.AssigneeDueAt,
 			&i.SeverityRank,
+			&i.CitizenFeedback,
+			&i.CitizenFeedbackAt,
 		); err != nil {
 			return nil, err
 		}
@@ -908,6 +935,21 @@ func (q *Queries) ListStatusEvents(ctx context.Context, reportID uuid.UUID) ([]L
 		return nil, err
 	}
 	return items, nil
+}
+
+const setCitizenFeedback = `-- name: SetCitizenFeedback :exec
+UPDATE reports SET citizen_feedback = $1, citizen_feedback_at = now(), updated_at = now()
+WHERE id = $2
+`
+
+type SetCitizenFeedbackParams struct {
+	Feedback *string   `json:"feedback"`
+	ID       uuid.UUID `json:"id"`
+}
+
+func (q *Queries) SetCitizenFeedback(ctx context.Context, arg SetCitizenFeedbackParams) error {
+	_, err := q.db.Exec(ctx, setCitizenFeedback, arg.Feedback, arg.ID)
+	return err
 }
 
 const setPhotoLabels = `-- name: SetPhotoLabels :exec

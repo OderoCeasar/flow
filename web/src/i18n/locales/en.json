@@ -9,7 +9,9 @@
     "install": "Add",
     "installHint": "Add Flow to your home screen to report leaks faster.",
     "installDismiss": "Not now",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "menu": "Menu",
+    "installApp": "Install the app"
   },
   "common": {
     "optional": "optional",
@@ -31,7 +33,9 @@
     "hours_one": "{{count}} hour",
     "hours_other": "{{count}} hours",
     "days_one": "{{count}} day",
-    "days_other": "{{count}} days"
+    "days_other": "{{count}} days",
+    "today": "Today, {{time}}",
+    "yesterday": "Yesterday, {{time}}"
   },
   "status": {
     "received": "Received",
@@ -85,7 +89,7 @@
   },
   "home": {
     "title": "Seen a water leak?",
-    "lead": "Tell the water company in under a minute. We'll keep you posted until it's fixed.",
+    "lead": "A quick report helps your water team act sooner.",
     "report": "Report a leak",
     "howItWorks": "How it works",
     "step1": "Take a photo of the leak.",
@@ -103,7 +107,12 @@
     "more": "More",
     "myReports": "My reports",
     "myReportsSignedOut": "My reports",
-    "staff": "Utility staff sign in"
+    "staff": "Utility staff sign in",
+    "eyebrow": "Cleaner streets. Safer water.",
+    "titleLine1": "Spot a leak?",
+    "titleLine2": "Let us know.",
+    "quick": "Takes less than a minute",
+    "trackLink": "Already reported? Track it"
   },
   "report": {
     "title": "Report a leak",
@@ -120,19 +129,20 @@
     "outboxSent_one": "Your saved report has been sent.",
     "outboxSent_other": "{{count}} saved reports have been sent.",
     "photo": {
-      "title": "Take a photo of the leak",
-      "lead": "A photo helps the crew find it and know what to bring.",
-      "take": "Take a photo",
+      "title": "Show us the leak",
+      "lead": "A clear photo helps the team know what to bring.",
+      "take": "Take photo",
       "choose": "Choose from gallery",
       "retake": "Retake",
       "remove": "Remove photo",
       "preparing": "Preparing your photo…",
       "ready": "Photo ready ({{size}})",
-      "skip": "I can't take a photo",
+      "skip": "Skip, I'll describe it instead",
       "error": "We couldn't use that photo. Try taking it again.",
       "notImage": "That file isn't a photo. Choose a picture from your gallery.",
       "alt": "Your photo of the leak",
-      "tip": "Stand back so the photo shows the leak and something nearby, like a gate or sign."
+      "tip": "Stand back so the photo shows the leak and something nearby, like a gate or sign.",
+      "takeHint": "Keep a safe distance"
     },
     "location": {
       "title": "Where is the leak?",
@@ -147,9 +157,17 @@
       "outside": "This spot is outside the area we cover (Nairobi). Check the pin is on the leak.",
       "landmark": "Nearby landmark or street",
       "landmarkHint": "For example: opposite Kencom bus stop.",
-      "confirm": "The pin is on the leak",
+      "confirm": "Confirm location",
       "mapLabel": "Map showing the leak location",
-      "pinLabel": "Leak location pin. Use the arrow keys to move it."
+      "pinLabel": "Leak location pin. Use the arrow keys to move it.",
+      "found": "We found your location.",
+      "foundHint": "Drag the pin if it's wrong.",
+      "cardLabel": "Leak location",
+      "looking": "Looking up the address…",
+      "noAddress": "Pinned on the map",
+      "addLandmark": "Add a nearby landmark",
+      "roadNear": "{{road}}, near {{place}}",
+      "otherReport": "Already reported: {{type}}"
     },
     "details": {
       "title": "A few quick details",
@@ -234,7 +252,29 @@
     "currentStep": "current step",
     "invalidBody": "The utility checked and couldn't find a leak to repair here.",
     "updated": "Last checked {{time}}",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "findHeader": "Track a report",
+    "findTitle": "Find your report",
+    "findLead": "Enter the reference number we gave you.",
+    "refLabel": "Reference number",
+    "refRequired": "Enter the reference number, like FLW-7K3QPX.",
+    "findButton": "Find report",
+    "whereTitle": "Where can I find this?",
+    "whereBody": "It was shown after you sent your report and included in your SMS update.",
+    "othersTitle_one": "{{count}} other person reported this leak",
+    "othersTitle_other": "{{count}} other people reported this leak",
+    "othersBody": "Your report helped move it up the list.",
+    "before": "Before",
+    "after": "After",
+    "photoAltBefore": "Photo of the {{type}} when it was reported",
+    "photoAltAfter": "Photo of the same spot after the repair",
+    "feedbackTitle": "Was it fixed properly?",
+    "feedbackBody": "Your answer helps the water team.",
+    "feedbackYes": "Yes, it was",
+    "feedbackNo": "No, not yet",
+    "thanksYes": "Thank you! We're glad it's fixed.",
+    "thanksNo": "Thank you for telling us. The water team will check it again.",
+    "feedbackChange": "Change my answer"
   },
   "myReports": {
     "title": "My reports",
@@ -421,7 +461,8 @@
     "priority_override": "Priority changed",
     "severity_override": "Severity changed",
     "details_changed": "Details corrected",
-    "ai_accepted": "AI suggestion accepted"
+    "ai_accepted": "AI suggestion accepted",
+    "citizen_feedback": "Reporter answered whether it was fixed"
   },
   "assign": {
     "title": "Assign {{ref}}",
@@ -594,7 +635,18 @@
       "report_closed": "This report is already closed. Reopen it first.",
       "invalid_status_change": "This job has moved on. Refresh to see the latest.",
       "cluster_closed": "One of these reports is already closed or merged. Refresh and try again.",
-      "account_disabled": "This account has been turned off. Contact an admin."
+      "account_disabled": "This account has been turned off. Contact an admin.",
+      "feedback_not_allowed": "You can answer this once the leak is marked Fixed."
     }
+  },
+  "menu": {
+    "report": "Report a leak",
+    "track": "Track a report",
+    "myReports": "My reports",
+    "staff": "Utility staff sign in"
+  },
+  "timeline": {
+    "current": "Current status",
+    "waiting": "Waiting"
   }
 }

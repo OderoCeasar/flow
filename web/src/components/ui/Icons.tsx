@@ -240,3 +240,22 @@ export const severityIcon = {
   high: IconSeverityHigh,
   critical: IconSeverityCritical,
 } as const;
+
+export const IconMore = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="5" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.2" fill="currentColor" />
+  </Svg>
+);
+export const IconNavigation = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m3 11 18-8-8 18-2-8z" />
+  </Svg>
+);
+export const IconUsers = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6" />
+  </Svg>
+);

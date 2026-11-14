@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import { statusColors } from '../../design/tokens';
-import { formatDateTime } from '../../lib/format';
+import { formatWhen } from '../../lib/format';
 import { TIMELINE, type Status } from '../../lib/types';
 import { IconCheck } from './Icons';
 
-// The citizen's status timeline: Received → Verified → Scheduled → In progress → Fixed.
-// Done steps show a tick and the time; the current step is marked for screen readers.
+// Received → Verified → Scheduled → In progress → Fixed.
+// Done steps: soft tick and the time. Current step: solid circle and
+// "Current status". Later steps: grey and "Waiting".
 export function Timeline({ status, events }: { status: Status; events: { status: Status; created_at: string; note?: string }[] }) {
   const { t, i18n } = useTranslation();
   if (status === 'invalid') {
     const ev = events.find((e) => e.status === 'invalid');
     return (
-      <div className="rounded-lg border-2 border-surface-line bg-surface p-4">
-        <p className="font-semibold">{t('status.invalid')}</p>
+      <div className="rounded-xl border border-surface-line bg-surface-muted p-4">
+        <p className="font-semibold text-ink">{t('status.invalid')}</p>
         <p className="mt-1 text-ink-muted">{t('track.invalidBody')}</p>
         {ev?.note && <p className="mt-2 text-ink">“{ev.note}”</p>}
       </div>
@@ -20,37 +20,38 @@ export function Timeline({ status, events }: { status: Status; events: { status:
   }
   const reached = new Map<Status, string>();
   for (const e of events) reached.set(e.status, e.created_at);
-  const currentIndex = TIMELINE.indexOf(status);
+  const current = TIMELINE.indexOf(status);
+  const finished = status === 'fixed';
   return (
     <ol className="flex flex-col">
       {TIMELINE.map((s, i) => {
-        const done = i <= currentIndex;
-        const current = i === currentIndex;
+        const done = i < current || (finished && i === current);
+        const isCurrent = i === current;
         const at = reached.get(s);
-        const c = statusColors[s];
+        const circle = isCurrent
+          ? 'bg-brand-600 text-white'
+          : done
+            ? 'bg-brand-100 text-brand-700'
+            : 'bg-surface-muted text-ink-subtle';
         return (
-          <li key={s} className="relative flex gap-3 pb-5 last:pb-0" aria-current={current ? 'step' : undefined}>
+          <li key={s} className="relative flex gap-4 pb-6 last:pb-0" aria-current={isCurrent ? 'step' : undefined}>
             {i < TIMELINE.length - 1 && (
               <span
-                className={`absolute left-[15px] top-8 h-[calc(100%-2rem)] w-0.5 ${i < currentIndex ? 'bg-brand-600' : 'bg-surface-sunken'}`}
+                className={`absolute left-[15px] top-8 h-[calc(100%-2rem)] w-0.5 ${i < current ? 'bg-brand-500' : 'bg-surface-sunken'}`}
                 aria-hidden="true"
               />
             )}
-            <span
-              className={`z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
-                done ? 'border-transparent' : 'border-surface-line bg-surface'
-              }`}
-              style={done ? { background: c.dot, color: '#fff' } : undefined}
-              aria-hidden="true"
-            >
-              {done ? <IconCheck size={16} strokeWidth={3} /> : <span className="text-sm text-ink-subtle">{i + 1}</span>}
+            <span className={`z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${circle}`} aria-hidden="true">
+              {done ? <IconCheck size={16} strokeWidth={2.5} /> : i + 1}
             </span>
-            <div className="flex flex-col pt-1">
-              <span className={`font-semibold ${done ? 'text-ink' : 'text-ink-subtle'}`}>
+            <div className="flex flex-col pt-0.5">
+              <span className={`font-semibold ${isCurrent ? 'text-ink' : done ? 'text-brand-700' : 'text-ink-subtle'}`}>
                 {t(`status.${s}`)}
-                {current && <span className="sr-only"> ({t('track.currentStep')})</span>}
+                {isCurrent && <span className="sr-only"> ({t('track.currentStep')})</span>}
               </span>
-              <span className="text-sm text-ink-muted">{at ? formatDateTime(at, i18n.language) : t(`statusHelp.${s}`)}</span>
+              <span className={`text-sm ${done || isCurrent ? 'text-brand-700' : 'text-ink-subtle'}`}>
+                {isCurrent && !finished ? t('timeline.current') : done ? (at ? formatWhen(at, t, i18n.language) : '') : t('timeline.waiting')}
+              </span>
             </div>
           </li>
         );

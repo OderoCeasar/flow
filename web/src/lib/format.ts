@@ -30,3 +30,20 @@ export function formatNumber(n: number, lang: string): string {
 export function directionsUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
+
+// "Today, 9:42 am", "Yesterday, 4:10 pm" or "12 Nov, 9:42 am".
+export function formatWhen(iso: string, t: TFunction, lang: string): string {
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString(lang === 'sw' ? 'sw-KE' : 'en-GB', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: lang !== 'sw',
+  });
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return t('time.today', { time });
+  if (d.toDateString() === yesterday.toDateString()) return t('time.yesterday', { time });
+  const day = d.toLocaleDateString(lang === 'sw' ? 'sw-KE' : 'en-GB', { day: 'numeric', month: 'short' });
+  return `${day}, ${time}`;
+}

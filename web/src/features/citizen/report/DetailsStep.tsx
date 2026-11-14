@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { ChoiceCards } from '../../../components/ui/ChoiceCards';
 import { Field, TextArea, TextInput } from '../../../components/ui/Field';
-import { CitizenShell } from '../../../components/ui/Layout';
+import { CitizenShell, PageHeading } from '../../../components/ui/Layout';
 import { IconDrop, IconLock, IconWarning, leakTypeIcon } from '../../../components/ui/Icons';
 import { ProgressSteps } from '../../../components/ui/ProgressSteps';
 import { Notice } from '../../../components/ui/States';
@@ -117,7 +117,6 @@ export default function DetailsStep() {
 
   return (
     <CitizenShell
-      title={t('report.title')}
       back={{ to: '/report/location', label: t('app.back') }}
       bottom={
         <>
@@ -138,10 +137,7 @@ export default function DetailsStep() {
       }
     >
       <ProgressSteps step={3} total={3} labels={steps} />
-      <div>
-        <h2 className="text-2xl font-bold">{t('report.details.title')}</h2>
-        <p className="mt-1 text-ink-muted">{t('report.details.lead')}</p>
-      </div>
+      <PageHeading title={t('report.details.title')} lead={t('report.details.lead')} />
 
       <form className="flex flex-col gap-6" onSubmit={(e) => void onSubmit(e)} noValidate>
         <ChoiceCards<LeakType | 'unsure'>
@@ -155,7 +151,7 @@ export default function DetailsStep() {
         />
 
         {match && dupChoice !== 'different' && (
-          <section aria-labelledby="dup-title" className="flex flex-col gap-3 rounded-xl border-2 border-warning-800/40 bg-warning-50 p-4">
+          <section aria-labelledby="dup-title" className="flex flex-col gap-3 rounded-xl border border-warning-800/30 bg-warning-50 p-4">
             <h3 id="dup-title" className="flex items-center gap-2 font-semibold text-warning-800">
               <IconWarning size={20} />
               {t('report.duplicate.title')}
@@ -179,7 +175,7 @@ export default function DetailsStep() {
               <Button variant={dupChoice === 'join' ? 'primary' : 'secondary'} aria-pressed={dupChoice === 'join'} onClick={() => setDupChoice('join')}>
                 {t('report.duplicate.add')}
               </Button>
-              <Button variant="ghost" onClick={() => setDupChoice('different')}>
+              <Button variant="outline" onClick={() => setDupChoice('different')}>
                 {t('report.duplicate.different')}
               </Button>
             </div>

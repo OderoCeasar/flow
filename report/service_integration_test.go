@@ -207,3 +207,33 @@ func TestCreateReportValidation(t *testing.T) {
 		t.Fatalf("want a phone field error, got %v", err)
 	}
 }
+
+func TestCitizenFeedbackOnlyWhenFixedAndFlagsReview(t *testing.T) {
+	svc, store, _, _ := setup(t)
+	ctx := context.Background()
+	lat, lng := -1.2864, 36.8172
+	res, err := svc.CreateReport(ctx, CreateReportInput{Lat: &lat, Lng: &lng, Description: "Burst pipe"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.Feedback(ctx, res.ReferenceCode, false); err == nil {
+		t.Fatal("feedback must wait until the leak is marked Fixed")
+	}
+
+	r, _ := store.GetReportByRef(ctx, res.ReferenceCode)
+	now := svc.now()
+	if err := store.SetReportStatus(ctx, db.SetReportStatusParams{ID: r.ID, Status: StatusFixed, FixedAt: &now}); err != nil {
+		t.Fatal(err)
+	}
+	status, err := svc.Feedback(ctx, res.ReferenceCode, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status.Feedback != "not_fixed" {
+		t.Fatalf("feedback = %q", status.Feedback)
+	}
+	r, _ = store.GetReportByRef(ctx, res.ReferenceCode)
+	if !r.NeedsReview || r.Status != StatusFixed {
+		t.Fatalf("a 'not fixed' answer should flag the report for review without reopening it; review=%v status=%s", r.NeedsReview, r.Status)
+	}
+}

@@ -54,6 +54,11 @@ type Config struct {
 	AnthropicAPIKey   string `mapstructure:"ANTHROPIC_API_KEY"`
 	AnthropicModel    string `mapstructure:"ANTHROPIC_MODEL"`
 
+	// Geocoder is "nominatim" (OpenStreetMap, the default) or "off".
+	Geocoder      string `mapstructure:"GEOCODER"`
+	NominatimURL  string `mapstructure:"NOMINATIM_URL"`
+	GeocoderEmail string `mapstructure:"GEOCODER_EMAIL"`
+
 	// SeedDemo loads the Nairobi demo data when the database is empty.
 	SeedDemo          bool          `mapstructure:"SEED_DEMO"`
 	WorkerConcurrency int           `mapstructure:"WORKER_CONCURRENCY"`
@@ -92,6 +97,8 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.SetDefault("AI_IMAGE_CLASSIFIER", "stub")
 	viper.SetDefault("AI_TEXT_CLASSIFIER", "keyword")
 	viper.SetDefault("ANTHROPIC_MODEL", "claude-opus-5-5")
+	viper.SetDefault("GEOCODER", "nominatim")
+	viper.SetDefault("NOMINATIM_URL", "https://nominatim.openstreetmap.org")
 	viper.SetDefault("WORKER_CONCURRENCY", 4)
 	viper.SetDefault("RESCORE_INTERVAL", "1h")
 

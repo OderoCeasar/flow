@@ -1,20 +1,41 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button, ButtonLink } from '../../components/ui/Button';
-import { Field, TextInput } from '../../components/ui/Field';
 import { CitizenShell, InstallPrompt } from '../../components/ui/Layout';
-import { IconCamera, IconOffline, IconUser } from '../../components/ui/Icons';
+import { IconCamera, IconOffline } from '../../components/ui/Icons';
 import { Notice } from '../../components/ui/States';
 import { clearDraft, loadDraft, outbox } from '../../lib/drafts';
 import { flushOutbox } from '../../lib/submit';
-import { useAuth } from '../../lib/auth';
+
+// Decorative water drop with soft rings, drawn inline so it costs no download.
+function HeroDrop() {
+  return (
+    <svg viewBox="0 0 260 260" className="h-auto w-[min(250px,34dvh)]" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="drop-fill" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#0b5cad" />
+          <stop offset="1" stopColor="#1a8cc4" />
+        </linearGradient>
+        <filter id="drop-shadow" x="-30%" y="-30%" width="160%" height="170%">
+          <feDropShadow dx="0" dy="14" stdDeviation="14" floodColor="#0b5cad" floodOpacity="0.22" />
+        </filter>
+      </defs>
+      <circle cx="130" cy="126" r="124" fill="none" stroke="#dcebf3" strokeWidth="1.5" />
+      <circle cx="130" cy="126" r="97" fill="none" stroke="#c9e1ee" strokeWidth="1.5" />
+      <ellipse cx="130" cy="218" rx="76" ry="12" fill="none" stroke="#a8d2e6" strokeWidth="2.5" />
+      <path
+        d="M130 58c33 0 58 22 58 58 0 40-24 73-58 73s-60-30-60-70c0-37 26-61 60-61z"
+        fill="url(#drop-fill)"
+        filter="url(#drop-shadow)"
+      />
+      <path d="M130 94c-12 16-20 28-20 39a20 20 0 0 0 40 0c0-11-8-23-20-39z" fill="none" stroke="#fff" strokeWidth="6" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function Home() {
   const { t } = useTranslation();
-  const nav = useNavigate();
-  const { user } = useAuth();
-  const [ref, setRef] = useState('');
   const [hasDraft, setHasDraft] = useState(false);
   const [waiting, setWaiting] = useState(0);
 
@@ -29,82 +50,66 @@ export default function Home() {
   }, []);
 
   return (
-    <CitizenShell bottom={<ButtonLink to="/report" size="lg" block icon={<IconCamera />}>{t('home.report')}</ButtonLink>}>
-      <section className="flex flex-col gap-2 pt-2">
-        <h1 className="text-3xl font-bold leading-tight">{t('home.title')}</h1>
-        <p className="text-lg text-ink-muted">{t('home.lead')}</p>
-      </section>
+    <CitizenShell
+      padded={false}
+      bottom={
+        <>
+          <ButtonLink to="/report" size="lg" block icon={<IconCamera />}>
+            {t('home.report')}
+          </ButtonLink>
+          <p className="text-center text-sm text-ink-muted">{t('home.quick')}</p>
+        </>
+      }
+    >
+      <div className="flex flex-1 flex-col bg-gradient-to-b from-[#f4f9fc] to-surface">
+        <div className="flex flex-1 items-center justify-center px-5 pb-2 pt-8">
+          <HeroDrop />
+        </div>
+        <section className="flex flex-col gap-3 px-7 pb-6">
+          <p className="text-sm font-bold tracking-wide text-brand-700">{t('home.eyebrow')}</p>
+          <h1 className="text-[2rem] font-normal leading-[1.15] tracking-tight text-ink-heading">
+            {t('home.titleLine1')}
+            <br />
+            {t('home.titleLine2')}
+          </h1>
+          <p className="text-[17px] leading-relaxed text-ink-muted">{t('home.lead')}</p>
+          <Link to="/track" className="mt-1 self-start rounded text-[15px] font-semibold text-brand-700 underline underline-offset-4 focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
+            {t('home.trackLink')}
+          </Link>
+        </section>
 
-      {hasDraft && (
-        <Notice>
-          <div className="flex flex-1 flex-col gap-2">
-            <span className="font-medium">{t('home.draft')}</span>
-            <div className="flex gap-2">
-              <ButtonLink to="/report" size="sm">{t('home.draftContinue')}</ButtonLink>
-              <Button size="sm" variant="ghost" onClick={() => void clearDraft().then(() => setHasDraft(false))}>
-                {t('home.draftDiscard')}
-              </Button>
-            </div>
+        {(hasDraft || waiting > 0) && (
+          <div className="flex flex-col gap-3 px-5 pb-5">
+            {hasDraft && (
+              <Notice>
+                <div className="flex flex-1 flex-col gap-2">
+                  <span className="font-medium">{t('home.draft')}</span>
+                  <div className="flex gap-2">
+                    <ButtonLink to="/report" size="sm">{t('home.draftContinue')}</ButtonLink>
+                    <Button size="sm" variant="ghost" onClick={() => void clearDraft().then(() => setHasDraft(false))}>
+                      {t('home.draftDiscard')}
+                    </Button>
+                  </div>
+                </div>
+              </Notice>
+            )}
+            {waiting > 0 && (
+              <Notice tone="warning">
+                <IconOffline size={18} className="mt-0.5 shrink-0" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <span>{t('home.waiting', { count: waiting })}</span>
+                  <Button size="sm" variant="secondary" onClick={() => void flushOutbox().then(() => outbox()).then((o) => setWaiting(o.length))}>
+                    {t('home.sendNow')}
+                  </Button>
+                </div>
+              </Notice>
+            )}
           </div>
-        </Notice>
-      )}
-
-      {waiting > 0 && (
-        <Notice tone="warning">
-          <IconOffline size={18} className="mt-0.5 shrink-0" />
-          <div className="flex flex-1 flex-col gap-2">
-            <span>{t('home.waiting', { count: waiting })}</span>
-            <Button size="sm" variant="secondary" onClick={() => void flushOutbox().then(() => outbox()).then((o) => setWaiting(o.length))}>
-              {t('home.sendNow')}
-            </Button>
-          </div>
-        </Notice>
-      )}
-
-      <ol className="grid gap-3 rounded-xl bg-surface p-4" aria-label={t('home.howItWorks')}>
-        {[1, 2, 3].map((n) => (
-          <li key={n} className="flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-800">{n}</span>
-            <span className="pt-1">{t(`home.step${n}`)}</span>
-          </li>
-        ))}
-      </ol>
-
-      <InstallPrompt />
-
-      <form
-        className="flex flex-col gap-3 rounded-xl bg-surface p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (ref.trim()) nav(`/track/${ref.trim().toUpperCase()}`);
-        }}
-      >
-        <Field label={t('home.trackLabel')} hint={t('home.trackHint')}>
-          {({ id, describedBy }) => (
-            <TextInput
-              id={id}
-              aria-describedby={describedBy}
-              value={ref}
-              onChange={(e) => setRef(e.target.value)}
-              placeholder="FLW-7K3QPX"
-              autoCapitalize="characters"
-              autoComplete="off"
-            />
-          )}
-        </Field>
-        <Button type="submit" variant="secondary" disabled={!ref.trim()}>
-          {t('home.trackButton')}
-        </Button>
-      </form>
-
-      <nav className="flex flex-col gap-2" aria-label={t('home.more')}>
-        <ButtonLink to="/my-reports" variant="ghost" icon={<IconUser size={20} />}>
-          {user?.role === 'citizen' ? t('home.myReports') : t('home.myReportsSignedOut')}
-        </ButtonLink>
-        <ButtonLink to="/staff/login" variant="ghost" size="sm" className="text-ink-muted">
-          {t('home.staff')}
-        </ButtonLink>
-      </nav>
+        )}
+        <div className="px-5 pb-5 empty:hidden">
+          <InstallPrompt />
+        </div>
+      </div>
     </CitizenShell>
   );
 }

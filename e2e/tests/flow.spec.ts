@@ -22,7 +22,7 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
     const page = await context.newPage();
 
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Seen a water leak?' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Spot a leak\?/ })).toBeVisible();
     await expectAccessible(page, 'home');
     await page.getByRole('link', { name: 'Report a leak' }).click();
 
@@ -35,10 +35,10 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
 
     // Step 2: location from GPS, pin shown
     await expect(page.getByText('Step 2 of 3')).toBeVisible();
-    await expect(page.getByText(/accurate to about/)).toBeVisible();
+    await expect(page.getByText('We found your location.')).toBeVisible();
     await expect(page.getByRole('button', { name: /Leak location pin/ })).toBeVisible();
     await expectAccessible(page, 'location step');
-    await page.getByRole('button', { name: 'The pin is on the leak' }).click();
+    await page.getByRole('button', { name: 'Confirm location' }).click();
 
     // Step 3: details
     await expect(page.getByText('Step 3 of 3')).toBeVisible();
@@ -120,14 +120,34 @@ test.describe.serial('report → assign → fix → citizen sees Fixed', () => {
     await expect(page.getByText('Fixed').first()).toBeVisible();
     await expect(page.locator('[aria-current="step"]')).toContainText('Fixed');
     await expectAccessible(page, 'status page');
+    // The reporter can say whether the repair worked.
+    await page.getByRole('button', { name: 'Yes, it was' }).click();
+    await expect(page.getByText("Thank you! We're glad it's fixed.")).toBeVisible();
     await context.close();
   });
 });
 
+test('the citizen app looks like a phone app on a small screen', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await page.goto('/');
+  // No sideways scrolling, and the main action is on screen without scrolling.
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  await expect(page.getByRole('link', { name: 'Report a leak' })).toBeInViewport();
+  const box = await page.getByRole('link', { name: 'Report a leak' }).boundingBox();
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+  await page.goto('/track');
+  await expect(page.getByRole('heading', { name: 'Find your report' })).toBeVisible();
+  await expectAccessible(page, 'track form');
+  await context.close();
+});
+
 test('the citizen app works in Swahili', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'SW' }).click();
-  await expect(page.getByRole('heading', { name: 'Umeona maji yakivuja?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Kiswahili' }).click();
+  await expect(page.getByRole('heading', { name: /Umeona uvujaji\?/ })).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'sw');
   await expectAccessible(page, 'home in Swahili');
 });

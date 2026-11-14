@@ -128,6 +128,30 @@ e2e/                Playwright + axe
 - **Background jobs use the Postgres `jobs` table** (`FOR UPDATE SKIP LOCKED`). Jobs have retries with backoff, re-queue if a worker dies, and identical waiting jobs are skipped. Job types: AI analysis, rescoring one report, the hourly rescore of all open reports, and SMS on status change.
 - **Every SMS goes through the `sms.SmsSender` interface.** `SMS_PROVIDER=console` logs messages; `africastalking` sends them for real. Messages go out in the reporter's chosen language.
 
+### Citizen app layout
+
+Every citizen screen uses one phone-shaped layout (`CitizenShell`).
+- **Phones:** full screen. The page scrolls normally and the main action stays pinned at the bottom.
+- **Tablets and desktops:** the same layout sits in a centred, rounded "phone" frame that scrolls inside, so it looks the same everywhere.
+
+The header has the logo (or a back arrow), a title on inner pages, and a **⋯** menu. The menu holds Track a report, My reports, the language switch (English / Kiswahili), Install the app (when the browser offers it), and staff sign-in.
+
+The end-to-end suite checks a 360 px phone: no sideways scrolling, the main button visible without scrolling, and touch targets at least 44 px.
+
+### Street address for the pin
+
+The location card shows where the pin is in words, e.g. "Ngong Road, near Prestige Plaza · Kilimani, Nairobi". It also prefills the report's landmark field.
+- The **server** looks this up through the `geocode.Reverser` interface. The default is OpenStreetMap's Nominatim, called with an identifying User-Agent, at most 1 request a second, with a 2,000-entry cache. `GEOCODER=off` disables it, and `NOMINATIM_URL` points at your own instance (needed for real traffic under OSM's usage policy).
+- **Privacy:** only the pin's coordinates are sent, never the photo or phone number, and they go from the server, not the citizen's phone.
+- If the lookup fails, the card says "Pinned on the map" and reporting carries on.
+
+### "Was it fixed properly?"
+
+Once a report is **Fixed**, its status page shows the before and after photos and asks the reporter whether the repair worked.
+- **"No, not yet"** flags the group for review. It shows up under **Needs review** on the dashboard, and the reason names the reference. The report is **not** reopened automatically; a dispatcher decides.
+- The answer is stored on the report (`citizen_feedback`) and in the audit log.
+- The status page shows only the reporter's own photo and the technician's after photo, never other reporters' photos.
+
 ### Data model
 
 The tables follow the spec, with a few additions:
@@ -190,7 +214,7 @@ Scores are recalculated when a report changes and every hour (`RESCORE_INTERVAL`
 
 ## How each UI/UX principle shows up
 
-1. **Make the main task short.** Reporting is three screens: photo → location → details. Only a photo *or* a description, plus a location, is required. Leak type, size, duration, landmark and phone are all marked optional. GPS fills the location, and a phone number is prefilled for signed-in citizens. The "Report a leak" button is pinned at the bottom of the home screen, and the report flow is fetched in the background while the home page is open.
+1. **Make the main task short.** Reporting is three screens: photo → location → details. The location card fills in the street address from the pin. Only a photo *or* a description, plus a location, is required. Leak type, size, duration, landmark and phone are all marked optional. GPS fills the location, and a phone number is prefilled for signed-in citizens. The "Report a leak" button is pinned at the bottom of the home screen, and the report flow is fetched in the background while the home page is open.
 2. **One thing at a time.** Each step is its own screen with "Step 2 of 3" and a progress bar. On the dashboard, the four most-used filters are visible and the rest sit behind **More filters**. Override forms and reasons only appear in a dialog when the dispatcher chooses to change something.
 3. **Always show what's happening.** "Preparing your photo…" while it's compressed, then the final size. "Finding your location…" with accuracy in metres. A real upload progress bar ("Uploading… 42%"). A success screen with the reference number and a status timeline. An offline banner, and "N reports waiting to send". The status page shows when it was last checked.
 4. **Prevent mistakes.**
@@ -247,4 +271,5 @@ Scores are recalculated when a report changes and every hour (`RESCORE_INTERVAL`
 - **Storage image:** MinIO no longer publishes community images to Docker Hub, so compose uses Bitnami's legacy MinIO build. Use managed S3 or your own MinIO image in production.
 - **Areas:** zones are seeded points (sub-county centres); admins draw service-area polygons, but zones can't be edited in the UI yet.
 - **Undo:** reassignment has no undo; assigning someone else changes it.
+- **Geocoding at scale:** the public Nominatim server is fine for a pilot; run your own instance (or a paid provider behind the same interface) before launch.
 - **Notifications:** SMS uses a console logger by default; Africa's Talking is wired up but untested against a live account.

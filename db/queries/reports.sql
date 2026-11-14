@@ -201,3 +201,11 @@ RETURNING *;
 
 -- name: GetActiveAssignment :one
 SELECT * FROM assignments WHERE report_id = $1 AND active;
+
+-- name: SetCitizenFeedback :exec
+UPDATE reports SET citizen_feedback = @feedback, citizen_feedback_at = now(), updated_at = now()
+WHERE id = @id;
+
+-- name: FlagReportForReview :exec
+UPDATE reports SET needs_review = true, review_reason = @review_reason, updated_at = now()
+WHERE id = @id;

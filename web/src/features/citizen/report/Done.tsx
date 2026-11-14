@@ -28,7 +28,7 @@ export default function Done() {
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-warning-50 text-warning-800">
             <IconOffline size={32} />
           </span>
-          <h1 className="text-2xl font-bold">{t('report.done.offlineTitle')}</h1>
+          <h1 className="text-2xl font-normal tracking-tight text-ink-heading">{t('report.done.offlineTitle')}</h1>
           <p className="text-ink-muted">{t('report.done.offlineBody')}</p>
         </div>
       </CitizenShell>
@@ -62,13 +62,13 @@ export default function Done() {
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success-50 text-success-700">
           <IconCheck size={36} strokeWidth={3} />
         </span>
-        <h1 className="text-2xl font-bold">{res.joined_existing ? t('report.done.joinedTitle') : t('report.done.title')}</h1>
+        <h1 className="text-2xl font-normal tracking-tight text-ink-heading">{res.joined_existing ? t('report.done.joinedTitle') : t('report.done.title')}</h1>
         <p className="text-ink-muted">{res.joined_existing ? t('report.done.joinedBody') : t('report.done.body')}</p>
       </div>
 
-      <div className="flex flex-col items-center gap-2 rounded-xl bg-surface p-5">
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-brand-100 bg-[#f5f9fd] p-5">
         <p className="text-sm font-semibold text-ink-muted">{t('report.done.ref')}</p>
-        <p className="font-mono text-3xl font-bold tracking-wider" data-testid="reference-code">
+        <p className="text-3xl font-bold tracking-wider text-brand-700" data-testid="reference-code">
           {res.reference_code}
         </p>
         <Button variant="ghost" onClick={() => void copy()} icon={copied ? <IconCheck size={18} /> : <IconCopy size={18} />}>
@@ -78,8 +78,8 @@ export default function Done() {
 
       <Notice tone={res.sms_updates ? 'success' : 'info'}>{res.sms_updates ? t('report.done.sms') : t('report.done.noSms')}</Notice>
 
-      <section className="rounded-xl bg-surface p-5">
-        <h2 className="mb-1 font-semibold">{t('track.whatNext')}</h2>
+      <section className="flex flex-col gap-1">
+        <h2 className="text-xl font-normal text-ink-heading">{t('track.whatNext')}</h2>
         <p className="mb-4 text-sm text-ink-muted">{t('report.done.typical', { time: duration(res.typical_fix_hours, t) })}</p>
         <Timeline status={res.status} events={[{ status: 'received', created_at: new Date().toISOString() }]} />
       </section>

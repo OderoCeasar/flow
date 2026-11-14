@@ -40,6 +40,7 @@ type Querier interface {
 	// Skips the insert when an identical job is already waiting.
 	EnqueueJob(ctx context.Context, arg EnqueueJobParams) error
 	FailJob(ctx context.Context, arg FailJobParams) error
+	FlagReportForReview(ctx context.Context, arg FlagReportForReviewParams) error
 	GetActiveAssignment(ctx context.Context, reportID uuid.UUID) (Assignment, error)
 	GetCluster(ctx context.Context, id uuid.UUID) (GetClusterRow, error)
 	GetLatestOTP(ctx context.Context, phone string) (OtpCode, error)
@@ -88,6 +89,7 @@ type Querier interface {
 	RetryJob(ctx context.Context, arg RetryJobParams) error
 	RevokeRefreshToken(ctx context.Context, tokenHash string) error
 	SavePrioritySettings(ctx context.Context, arg SavePrioritySettingsParams) error
+	SetCitizenFeedback(ctx context.Context, arg SetCitizenFeedbackParams) error
 	SetClusterPrimary(ctx context.Context, arg SetClusterPrimaryParams) error
 	SetPhotoLabels(ctx context.Context, arg SetPhotoLabelsParams) error
 	// Results of the background AI pass. Only fills leak type and size when the

@@ -19,6 +19,7 @@ import (
 	"flow/config"
 	db "flow/db/sqlc"
 	"flow/db_migrator"
+	"flow/geocode"
 	"flow/report"
 	"flow/seed"
 	"flow/sms"
@@ -74,7 +75,8 @@ func main() {
 	server := api.NewServer(appConfig, store, tokenMaker,
 		account.NewService(store, tokenMaker, smsSender, appConfig),
 		reports,
-		admin.NewService(store, taskDistributor))
+		admin.NewService(store, taskDistributor),
+		newGeocoder(appConfig))
 
 	httpServer := &http.Server{
 		Addr:              appConfig.HTTPServerAddress,
@@ -95,6 +97,13 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	_ = httpServer.Shutdown(shutdownCtx)
+}
+
+func newGeocoder(cfg config.Config) geocode.Reverser {
+	if cfg.Geocoder == "off" {
+		return geocode.Off{}
+	}
+	return geocode.NewNominatim(cfg.NominatimURL, "Flow/0.1 (water leak reporting; https://github.com/OderoCeasar/flow)", cfg.GeocoderEmail)
 }
 
 func newPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {

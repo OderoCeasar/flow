@@ -46,7 +46,9 @@ func (server *Server) setupRouter() {
 	// Citizens (most work without an account).
 	v1.POST("/reports", server.reportLimiter.byIP(), server.createReport)
 	v1.GET("/reports/nearby", server.nearbyReports)
-	v1.GET("/reports/:ref", server.getPublicReport)
+	v1.GET("/reports/:ref", server.lookupLimiter.byIP(), server.getPublicReport)
+	v1.POST("/reports/:ref/feedback", server.feedbackLimiter.byIP(), server.reportFeedback)
+	v1.GET("/geocode/reverse", server.geocodeLimiter.byIP(), server.reverseGeocode)
 
 	auth := v1.Group("/auth")
 	auth.POST("/otp/request", server.otpIPLimiter.byIP(), server.requestOTP)

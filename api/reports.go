@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -109,4 +110,37 @@ func (server *Server) myReports(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"items": res})
+}
+
+type feedbackRequest struct {
+	Fixed *bool `json:"fixed" binding:"required"`
+}
+
+func (server *Server) reportFeedback(ctx *gin.Context) {
+	var req feedbackRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		respondError(ctx, badRequest("Choose yes or no."))
+		return
+	}
+	res, err := server.reports.Feedback(ctx, ctx.Param("ref"), *req.Fixed)
+	if err != nil {
+		respondError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, res)
+}
+
+// reverseGeocode never fails the page: without an address the app just shows the pin.
+func (server *Server) reverseGeocode(ctx *gin.Context) {
+	lat, err1 := strconv.ParseFloat(ctx.Query("lat"), 64)
+	lng, err2 := strconv.ParseFloat(ctx.Query("lng"), 64)
+	if err1 != nil || err2 != nil || lat < -90 || lat > 90 || lng < -180 || lng > 180 {
+		respondError(ctx, badRequest("Send lat and lng as numbers."))
+		return
+	}
+	addr, err := server.geocoder.Reverse(ctx, lat, lng)
+	if err != nil {
+		slog.WarnContext(ctx, "reverse geocode failed", "err", err)
+	}
+	ctx.JSON(http.StatusOK, addr)
 }

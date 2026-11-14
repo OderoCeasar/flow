@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
-import { CitizenShell } from '../../../components/ui/Layout';
-import { IconCamera, IconImage, IconArrowRight } from '../../../components/ui/Icons';
+import { CitizenShell, PageHeading } from '../../../components/ui/Layout';
+import { IconArrowRight, IconCamera, IconImage } from '../../../components/ui/Icons';
 import { ProgressSteps } from '../../../components/ui/ProgressSteps';
-import { Notice } from '../../../components/ui/States';
 import { compressImage, formatBytes } from '../../../lib/image';
 import { useFlow } from './ReportFlow';
 
@@ -46,78 +45,72 @@ export default function PhotoStep() {
   const steps = [t('report.steps.photo'), t('report.steps.location'), t('report.steps.details')];
   return (
     <CitizenShell
-      title={t('report.title')}
       back={{ to: '/', label: t('app.back') }}
       bottom={
-        <>
-          <Button size="lg" block disabled={!draft.photo || busy} onClick={() => nav('/report/location')} icon={<IconArrowRight />}>
+        draft.photo && !busy ? (
+          <Button size="lg" block onClick={() => nav('/report/location')} icon={<IconArrowRight />}>
             {t('report.continue')}
           </Button>
-          <Button
-            variant="ghost"
-            block
-            onClick={() => {
-              update({ photo: undefined, noPhoto: true });
-              nav('/report/location');
-            }}
-          >
-            {t('report.photo.skip')}
-          </Button>
-        </>
+        ) : undefined
       }
     >
       <ProgressSteps step={1} total={3} labels={steps} />
-      <div>
-        <h2 className="text-2xl font-bold">{t('report.photo.title')}</h2>
-        <p className="mt-1 text-ink-muted">{t('report.photo.lead')}</p>
-      </div>
+      <PageHeading title={t('report.photo.title')} lead={t('report.photo.lead')} />
 
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} aria-hidden="true"
         onChange={(e) => void onFile(e.target.files?.[0])} />
       <input ref={galleryRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden="true"
         onChange={(e) => void onFile(e.target.files?.[0])} />
 
-      {busy && (
-        <div role="status" className="flex items-center gap-3 rounded-lg bg-surface p-4">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-600 border-t-transparent motion-reduce:animate-none" aria-hidden="true" />
+      {busy ? (
+        <div role="status" className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-brand-200 bg-[#f1f7fb] text-brand-700">
+          <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-brand-600 border-t-transparent motion-reduce:animate-none" aria-hidden="true" />
           {t('report.photo.preparing')}
         </div>
-      )}
-
-      {preview && !busy ? (
+      ) : preview ? (
         <figure className="flex flex-col gap-3">
-          <img src={preview} alt={t('report.photo.alt')} className="max-h-[42vh] w-full rounded-lg object-cover" />
+          <img src={preview} alt={t('report.photo.alt')} className="aspect-[4/3] w-full rounded-xl object-cover" />
           <figcaption className="text-sm text-ink-muted" role="status">
             {t('report.photo.ready', { size: formatBytes(draft.photo!.size) })}
           </figcaption>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={() => cameraRef.current?.click()} icon={<IconCamera size={20} />}>
+            <Button variant="outline" onClick={() => cameraRef.current?.click()} icon={<IconCamera size={20} />}>
               {t('report.photo.retake')}
             </Button>
-            <Button variant="secondary" onClick={() => update({ photo: undefined })}>
+            <Button variant="outline" onClick={() => update({ photo: undefined })}>
               {t('report.photo.remove')}
             </Button>
           </div>
         </figure>
       ) : (
-        !busy && (
-          <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => cameraRef.current?.click()}
-              className="flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-brand-500 bg-brand-50 text-brand-700 hover:bg-brand-100 focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus"
-            >
-              <IconCamera size={48} />
-              <span className="text-lg font-semibold">{t('report.photo.take')}</span>
-            </button>
-            <Button variant="secondary" onClick={() => galleryRef.current?.click()} icon={<IconImage size={20} />}>
-              {t('report.photo.choose')}
-            </Button>
-          </div>
-        )
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => cameraRef.current?.click()}
+            className="flex min-h-[260px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-brand-300 bg-[#f1f7fb] text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus motion-reduce:transition-none"
+          >
+            <span className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-[#dcebf5]">
+              <IconCamera size={30} />
+            </span>
+            <span className="text-lg font-semibold">{t('report.photo.take')}</span>
+            <span className="text-sm text-ink-muted">{t('report.photo.takeHint')}</span>
+          </button>
+          <Button variant="outline" size="lg" block onClick={() => galleryRef.current?.click()} icon={<IconImage size={20} />}>
+            {t('report.photo.choose')}
+          </Button>
+          <button
+            type="button"
+            onClick={() => {
+              update({ photo: undefined, noPhoto: true });
+              nav('/report/location');
+            }}
+            className="min-h-touch rounded text-[17px] font-semibold text-brand-700 hover:underline focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus"
+          >
+            {t('report.photo.skip')}
+          </button>
+        </div>
       )}
       {error && <p role="alert" className="font-medium text-danger-700">{error}</p>}
-      <Notice>{t('report.photo.tip')}</Notice>
     </CitizenShell>
   );
 }

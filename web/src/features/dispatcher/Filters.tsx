@@ -111,10 +111,9 @@ export function toQuery(params: URLSearchParams, bbox?: [number, number, number,
   const q = new URLSearchParams();
   const status = params.get('status') ?? 'open';
   if (status === 'open') q.set('status', OPEN_STATUSES);
-  else if (status === 'review') {
-    q.set('status', OPEN_STATUSES);
-    q.set('needs_review', 'true');
-  } else if (status !== 'all') q.set('status', status);
+  // Any status: a Fixed report lands here when its reporter says it isn't fixed.
+  else if (status === 'review') q.set('needs_review', 'true');
+  else if (status !== 'all') q.set('status', status);
   for (const k of ['severity', 'leak_type', 'zone', 'from', 'to', 'q', 'sort', 'page']) {
     const v = params.get(k);
     if (v) q.set(k, v);

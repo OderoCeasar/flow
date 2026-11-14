@@ -122,6 +122,8 @@ export interface PublicStatus {
   others_reported: number;
   invalid_reason?: string;
   typical_fix_hours: number;
+  photos: { kind: 'before' | 'after'; url: string }[];
+  feedback?: 'fixed' | 'not_fixed';
   events: { status: Status; note?: string; created_at: string }[];
   created_at: string;
   updated_at: string;
@@ -134,6 +136,8 @@ export interface NearbyMatch {
   status: Status;
   report_count: number;
   distance_m: number;
+  lat: number;
+  lng: number;
   created_at: string;
 }
 

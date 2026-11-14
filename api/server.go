@@ -11,6 +11,7 @@ import (
 	"flow/apperr"
 	"flow/config"
 	db "flow/db/sqlc"
+	"flow/geocode"
 	"flow/report"
 	"flow/token"
 )
@@ -24,16 +25,20 @@ type Server struct {
 	accounts   *account.Service
 	reports    *report.Service
 	admin      *admin.Service
+	geocoder   geocode.Reverser
 	// Limiters for the unauthenticated endpoints that cost money (SMS) or
 	// invite spam (report submission).
 	reportLimiter   *rateLimiter
 	otpIPLimiter    *rateLimiter
 	otpPhoneLimiter *rateLimiter
 	loginLimiter    *rateLimiter
+	lookupLimiter   *rateLimiter
+	geocodeLimiter  *rateLimiter
+	feedbackLimiter *rateLimiter
 }
 
 // NewServer creates a new HTTP server and sets up routing.
-func NewServer(cfg config.Config, store db.Store, tokenMaker token.Maker, accounts *account.Service, reports *report.Service, adminSvc *admin.Service) *Server {
+func NewServer(cfg config.Config, store db.Store, tokenMaker token.Maker, accounts *account.Service, reports *report.Service, adminSvc *admin.Service, geocoder geocode.Reverser) *Server {
 	server := &Server{
 		config:     cfg,
 		store:      store,
@@ -41,12 +46,18 @@ func NewServer(cfg config.Config, store db.Store, tokenMaker token.Maker, accoun
 		accounts:   accounts,
 		reports:    reports,
 		admin:      adminSvc,
+		geocoder:   geocoder,
 		// 10 reports an hour per IP, bursting to 5.
 		reportLimiter: newRateLimiter(10, 5),
 		// 10 code requests an hour per IP, and 3 per phone number.
 		otpIPLimiter:    newRateLimiter(10, 5),
 		otpPhoneLimiter: newRateLimiter(3, 3),
 		loginLimiter:    newRateLimiter(30, 10),
+		// Status pages refresh every minute, so allow plenty; this only stops
+		// someone guessing reference codes.
+		lookupLimiter:   newRateLimiter(600, 60),
+		geocodeLimiter:  newRateLimiter(120, 20),
+		feedbackLimiter: newRateLimiter(20, 5),
 	}
 	server.setupRouter()
 	return server

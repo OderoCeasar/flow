@@ -9,7 +9,9 @@
     "install": "Ongeza",
     "installHint": "Weka Flow kwenye skrini yako ya mwanzo ili kuripoti haraka zaidi.",
     "installDismiss": "Sio sasa",
-    "signOut": "Toka"
+    "signOut": "Toka",
+    "menu": "Menyu",
+    "installApp": "Sakinisha programu"
   },
   "common": {
     "optional": "si lazima",
@@ -31,7 +33,9 @@
     "hours_one": "saa {{count}}",
     "hours_other": "saa {{count}}",
     "days_one": "siku {{count}}",
-    "days_other": "siku {{count}}"
+    "days_other": "siku {{count}}",
+    "today": "Leo, {{time}}",
+    "yesterday": "Jana, {{time}}"
   },
   "status": {
     "received": "Imepokelewa",
@@ -85,7 +89,7 @@
   },
   "home": {
     "title": "Umeona maji yakivuja?",
-    "lead": "Iambie kampuni ya maji kwa chini ya dakika moja. Tutakujulisha hadi irekebishwe.",
+    "lead": "Ripoti fupi husaidia timu ya maji kuchukua hatua mapema.",
     "report": "Ripoti uvujaji",
     "howItWorks": "Jinsi inavyofanya kazi",
     "step1": "Piga picha ya uvujaji.",
@@ -103,7 +107,12 @@
     "more": "Zaidi",
     "myReports": "Ripoti zangu",
     "myReportsSignedOut": "Ripoti zangu",
-    "staff": "Wafanyakazi wa kampuni ya maji, ingia"
+    "staff": "Wafanyakazi wa kampuni ya maji, ingia",
+    "eyebrow": "Mitaa safi. Maji salama.",
+    "titleLine1": "Umeona uvujaji?",
+    "titleLine2": "Tujulishe.",
+    "quick": "Inachukua chini ya dakika moja",
+    "trackLink": "Umesharipoti? Ifuatilie"
   },
   "report": {
     "title": "Ripoti uvujaji",
@@ -120,19 +129,20 @@
     "outboxSent_one": "Ripoti uliyohifadhi imetumwa.",
     "outboxSent_other": "Ripoti {{count}} ulizohifadhi zimetumwa.",
     "photo": {
-      "title": "Piga picha ya uvujaji",
-      "lead": "Picha inasaidia timu kuupata na kujua vifaa vya kuleta.",
+      "title": "Tuonyeshe uvujaji",
+      "lead": "Picha wazi husaidia timu kujua vifaa vya kuleta.",
       "take": "Piga picha",
-      "choose": "Chagua kutoka kwenye picha zako",
+      "choose": "Chagua kutoka kwenye picha",
       "retake": "Piga tena",
       "remove": "Ondoa picha",
       "preparing": "Tunaandaa picha yako…",
       "ready": "Picha iko tayari ({{size}})",
-      "skip": "Siwezi kupiga picha",
+      "skip": "Ruka, nitaeleza badala yake",
       "error": "Hatukuweza kutumia picha hiyo. Jaribu kuipiga tena.",
       "notImage": "Faili hiyo si picha. Chagua picha kutoka kwenye simu yako.",
       "alt": "Picha yako ya uvujaji",
-      "tip": "Simama mbali kidogo ili picha ionyeshe uvujaji na kitu kilicho karibu, kama lango au bango."
+      "tip": "Simama mbali kidogo ili picha ionyeshe uvujaji na kitu kilicho karibu, kama lango au bango.",
+      "takeHint": "Kaa umbali salama"
     },
     "location": {
       "title": "Uvujaji uko wapi?",
@@ -147,9 +157,17 @@
       "outside": "Mahali hapa ni nje ya eneo tunalohudumia (Nairobi). Hakikisha alama iko kwenye uvujaji.",
       "landmark": "Alama ya karibu au jina la barabara",
       "landmarkHint": "Kwa mfano: mkabala na kituo cha basi cha Kencom.",
-      "confirm": "Alama iko kwenye uvujaji",
+      "confirm": "Thibitisha mahali",
       "mapLabel": "Ramani inayoonyesha mahali uvujaji ulipo",
-      "pinLabel": "Alama ya mahali uvujaji ulipo. Tumia vitufe vya mishale kuisogeza."
+      "pinLabel": "Alama ya mahali uvujaji ulipo. Tumia vitufe vya mishale kuisogeza.",
+      "found": "Tumepata mahali ulipo.",
+      "foundHint": "Buruta alama kama si sahihi.",
+      "cardLabel": "Mahali pa uvujaji",
+      "looking": "Tunatafuta anwani…",
+      "noAddress": "Imewekwa kwenye ramani",
+      "addLandmark": "Ongeza alama ya karibu",
+      "roadNear": "{{road}}, karibu na {{place}}",
+      "otherReport": "Imesharipotiwa: {{type}}"
     },
     "details": {
       "title": "Maelezo machache",
@@ -234,7 +252,29 @@
     "currentStep": "hatua ya sasa",
     "invalidBody": "Kampuni ya maji ilikagua na haikupata uvujaji wa kurekebisha hapa.",
     "updated": "Iliangaliwa mara ya mwisho {{time}}",
-    "refresh": "Onyesha upya"
+    "refresh": "Onyesha upya",
+    "findHeader": "Fuatilia ripoti",
+    "findTitle": "Tafuta ripoti yako",
+    "findLead": "Weka nambari ya kumbukumbu tuliyokupa.",
+    "refLabel": "Nambari ya kumbukumbu",
+    "refRequired": "Weka nambari ya kumbukumbu, kama FLW-7K3QPX.",
+    "findButton": "Tafuta ripoti",
+    "whereTitle": "Naipata wapi?",
+    "whereBody": "Ilionyeshwa baada ya kutuma ripoti yako, na iko kwenye ujumbe wako wa SMS.",
+    "othersTitle_one": "Mtu mwingine {{count}} aliripoti uvujaji huu",
+    "othersTitle_other": "Watu wengine {{count}} waliripoti uvujaji huu",
+    "othersBody": "Ripoti yako ilisaidia kuipandisha kwenye orodha.",
+    "before": "Kabla",
+    "after": "Baada",
+    "photoAltBefore": "Picha ya {{type}} ilipokuwa ikiripotiwa",
+    "photoAltAfter": "Picha ya mahali hapo baada ya ukarabati",
+    "feedbackTitle": "Je, imerekebishwa vizuri?",
+    "feedbackBody": "Jibu lako linasaidia timu ya maji.",
+    "feedbackYes": "Ndiyo",
+    "feedbackNo": "Hapana, bado",
+    "thanksYes": "Asante! Tunafurahi imerekebishwa.",
+    "thanksNo": "Asante kwa kutujulisha. Timu ya maji itaikagua tena.",
+    "feedbackChange": "Badilisha jibu langu"
   },
   "myReports": {
     "title": "Ripoti zangu",
@@ -421,7 +461,8 @@
     "priority_override": "Kipaumbele kimebadilishwa",
     "severity_override": "Uzito umebadilishwa",
     "details_changed": "Maelezo yamesahihishwa",
-    "ai_accepted": "Pendekezo la AI limekubaliwa"
+    "ai_accepted": "Pendekezo la AI limekubaliwa",
+    "citizen_feedback": "Mripoti alijibu kama imerekebishwa"
   },
   "assign": {
     "title": "Mpe fundi {{ref}}",
@@ -594,7 +635,18 @@
       "report_closed": "Ripoti hii imeshafungwa. Ifungue tena kwanza.",
       "invalid_status_change": "Kazi hii imesonga mbele. Onyesha upya kuona hali ya sasa.",
       "cluster_closed": "Moja ya ripoti hizi imeshafungwa au kuunganishwa. Onyesha upya na ujaribu tena.",
-      "account_disabled": "Akaunti hii imezimwa. Wasiliana na msimamizi mkuu."
+      "account_disabled": "Akaunti hii imezimwa. Wasiliana na msimamizi mkuu.",
+      "feedback_not_allowed": "Unaweza kujibu hili uvujaji ukishawekwa kama Imerekebishwa."
     }
+  },
+  "menu": {
+    "report": "Ripoti uvujaji",
+    "track": "Fuatilia ripoti",
+    "myReports": "Ripoti zangu",
+    "staff": "Wafanyakazi wa kampuni ya maji, ingia"
+  },
+  "timeline": {
+    "current": "Hali ya sasa",
+    "waiting": "Inasubiri"
   }
 }

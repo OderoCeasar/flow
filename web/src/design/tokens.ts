@@ -7,6 +7,7 @@ export const colors = {
     50: '#eef6ff',
     100: '#d9eaff',
     200: '#b3d4ff',
+    300: '#8fbcf0',
     500: '#1668c7',
     600: '#0b5cad', // primary buttons: 6.6:1 against white text
     700: '#094a8c',
@@ -15,6 +16,7 @@ export const colors = {
   },
   ink: {
     DEFAULT: '#111827', // body text
+    heading: '#0f2c4a', // citizen headings: deep navy, 14:1 on white
     muted: '#4b5563', // secondary text: 7.6:1 on white
     subtle: '#5b6472', // tertiary text: 6.1:1 on white
     inverse: '#ffffff',
@@ -28,6 +30,10 @@ export const colors = {
   danger: { 50: '#fef2f2', 600: '#b91c1c', 700: '#991b1b' },
   success: { 50: '#f0fdf4', 700: '#15803d' },
   warning: { 50: '#fffbeb', 800: '#92400e' },
+  // Teal accent for progress and "found it" confirmations.
+  accent: { 50: '#e8f6f3', 600: '#0d8a7d', 700: '#0f6b61', 800: '#115e59' },
+  // Page background around the phone frame on wide screens.
+  canvas: '#edf2f6',
   focus: '#f59e0b',
 } as const;
 

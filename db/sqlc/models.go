@@ -105,6 +105,8 @@ type Report struct {
 	FixedAt                *time.Time      `json:"fixed_at"`
 	CreatedAt              time.Time       `json:"created_at"`
 	UpdatedAt              time.Time       `json:"updated_at"`
+	CitizenFeedback        *string         `json:"citizen_feedback"`
+	CitizenFeedbackAt      *time.Time      `json:"citizen_feedback_at"`
 }
 
 type ReportAudit struct {
@@ -169,6 +171,8 @@ type ReportView struct {
 	AssigneeName           string          `json:"assignee_name"`
 	AssigneeDueAt          *time.Time      `json:"assignee_due_at"`
 	SeverityRank           int32           `json:"severity_rank"`
+	CitizenFeedback        *string         `json:"citizen_feedback"`
+	CitizenFeedbackAt      *time.Time      `json:"citizen_feedback_at"`
 }
 
 type SensitiveSite struct {
