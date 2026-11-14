@@ -192,16 +192,21 @@ export function MoreMenu({ variant = 'citizen' }: { variant?: 'citizen' | 'techn
   );
 }
 
-// CitizenShell is the phone-shaped layout for every citizen screen.
-// Phones: full screen, the page scrolls, and the main action stays pinned at
-// the bottom within thumb reach. Wider screens: the same layout in a centred
-// phone frame that scrolls inside, so the app looks the same everywhere.
+const widths = { narrow: 'max-w-2xl', wide: 'max-w-6xl' } as const;
+
+// CitizenShell is the layout for every citizen and technician screen. It fills
+// the window at every size: a full-width header, the page, and (on step
+// screens) a bottom bar with the main action, which stays within thumb reach on
+// phones. "narrow" keeps forms at a readable width; "wide" is for pages that
+// lay out in two columns on large screens.
 export function CitizenShell({
   title,
   back,
   children,
   bottom,
   padded = true,
+  width = 'narrow',
+  bottomOnDesktop = true,
   menu = 'citizen',
   homeTo = '/',
 }: {
@@ -212,20 +217,24 @@ export function CitizenShell({
   children: ReactNode;
   bottom?: ReactNode;
   padded?: boolean;
+  width?: keyof typeof widths;
+  // Some pages show their main action inline on large screens instead.
+  bottomOnDesktop?: boolean;
 }) {
   const { t } = useTranslation();
   const iconButton =
     '-ml-2 flex min-h-touch min-w-touch items-center justify-center rounded-full text-ink hover:bg-surface-muted ' +
     'focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus';
+  const column = `mx-auto w-full ${widths[width]}`;
   return (
-    <div className="min-h-dvh bg-canvas sm:flex sm:items-center sm:justify-center sm:p-6">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-surface focus:p-3">
+    <div className="flex min-h-dvh flex-col bg-surface">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[1200] focus:rounded focus:bg-surface focus:p-3">
         {t('app.skip')}
       </a>
-      <div className="mx-auto flex min-h-dvh w-full flex-col bg-surface sm:h-[min(880px,calc(100dvh-3rem))] sm:min-h-0 sm:max-w-[400px] sm:overflow-hidden sm:rounded-[28px] sm:shadow-[0_24px_60px_-20px_rgba(15,44,74,0.25)] sm:ring-1 sm:ring-black/5">
-        <OfflineBanner />
-        <header className="sticky top-0 z-[1100] border-b border-surface-sunken bg-surface/95 backdrop-blur sm:static">
-          <div className="grid min-h-[64px] grid-cols-[auto_1fr_auto] items-center gap-2 px-4">
+      <OfflineBanner />
+      <header className="sticky top-0 z-[1100] border-b border-surface-sunken bg-surface/95 backdrop-blur">
+        <div className="mx-auto grid min-h-[64px] w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 lg:px-8">
+          <div className="flex items-center">
             {back ? (
               'to' in back ? (
                 <Link to={back.to} className={iconButton} aria-label={back.label}>
@@ -244,19 +253,21 @@ export function CitizenShell({
                 <span aria-hidden="true">Flow</span>
               </Link>
             )}
-            {title ? <h1 className="truncate text-center text-base font-semibold text-ink">{title}</h1> : <span />}
+          </div>
+          {title ? <h1 className="truncate text-center text-base font-semibold text-ink">{title}</h1> : <span />}
+          <div className="flex justify-end">
             <MoreMenu variant={menu} />
           </div>
-        </header>
-        <main id="main" className={`flex flex-1 flex-col sm:overflow-y-auto ${padded ? 'gap-5 px-5 py-6' : ''}`}>
-          {children}
-        </main>
-        {bottom && (
-          <div className="sticky bottom-0 z-[1100] border-t border-surface-sunken bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:static">
-            <div className="flex flex-col gap-2 px-5 py-4">{bottom}</div>
-          </div>
-        )}
-      </div>
+        </div>
+      </header>
+      <main id="main" className="flex flex-1 flex-col">
+        {padded ? <div className={`${column} flex flex-1 flex-col gap-5 px-5 py-6 lg:px-8 lg:py-10`}>{children}</div> : children}
+      </main>
+      {bottom && (
+        <div className={`sticky bottom-0 z-[1100] border-t border-surface-sunken bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur ${bottomOnDesktop ? '' : 'lg:hidden'}`}>
+          <div className={`${column} flex flex-col gap-2 px-5 py-4 lg:px-8`}>{bottom}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -265,7 +276,7 @@ export function CitizenShell({
 export function PageHeading({ title, lead, as: Tag = 'h1' }: { title: string; lead?: string; as?: 'h1' | 'h2' }) {
   return (
     <div className="flex flex-col gap-2">
-      <Tag className="text-2xl font-normal leading-tight tracking-tight text-ink-heading">{title}</Tag>
+      <Tag className="text-2xl font-normal leading-tight tracking-tight text-ink-heading lg:text-[1.9rem]">{title}</Tag>
       {lead && <p className="text-[17px] leading-relaxed text-ink-muted">{lead}</p>}
     </div>
   );

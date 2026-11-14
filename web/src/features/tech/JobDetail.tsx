@@ -81,6 +81,22 @@ export default function JobDetail() {
   });
   const j = q.data;
   const open = j && j.status !== 'fixed' && j.status !== 'invalid';
+  const actions = open ? (
+    <>
+      {j.status === 'in_progress' ? (
+        <ButtonLink to={`/tech/jobs/${id}/fix`} size="lg" block>{t('tech.markFixed')}</ButtonLink>
+      ) : (
+        <>
+          <Button size="lg" block loading={start.isPending} onClick={() => start.mutate()}>{t('tech.startJob')}</Button>
+          <ButtonLink to={`/tech/jobs/${id}/fix`} variant="outline" size="lg" block>{t('tech.markFixed')}</ButtonLink>
+        </>
+      )}
+      <button type="button" onClick={() => setFollowUp(true)}
+        className="min-h-touch rounded font-semibold text-ink hover:underline focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
+        {t('tech.cantFix')}
+      </button>
+    </>
+  ) : undefined;
   const before = j?.photos.find((p) => p.kind === 'before');
   const after = j?.photos.filter((p) => p.kind === 'after') ?? [];
 
@@ -89,24 +105,9 @@ export default function JobDetail() {
       menu="technician"
       title={t('tech.jobDetails')}
       back={{ to: '/tech', label: t('app.back') }}
-      bottom={
-        open ? (
-          <>
-            {j.status === 'in_progress' ? (
-              <ButtonLink to={`/tech/jobs/${id}/fix`} size="lg" block>{t('tech.markFixed')}</ButtonLink>
-            ) : (
-              <>
-                <Button size="lg" block loading={start.isPending} onClick={() => start.mutate()}>{t('tech.startJob')}</Button>
-                <ButtonLink to={`/tech/jobs/${id}/fix`} variant="outline" size="lg" block>{t('tech.markFixed')}</ButtonLink>
-              </>
-            )}
-            <button type="button" onClick={() => setFollowUp(true)}
-              className="min-h-touch rounded font-semibold text-ink hover:underline focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
-              {t('tech.cantFix')}
-            </button>
-          </>
-        ) : undefined
-      }
+      bottom={actions}
+      bottomOnDesktop={false}
+      width="wide"
     >
       {q.isLoading && (
         <div className="flex flex-col gap-4" role="status" aria-label={t('tech.loading')}>
@@ -116,7 +117,8 @@ export default function JobDetail() {
       )}
       {q.isError && <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} />}
       {j && (
-        <>
+        <div className="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-10">
+        <div className="flex flex-col gap-5">
           {before && (
             <img src={before.url} className="aspect-[16/9.5] w-full rounded-xl object-cover"
               alt={t('detail.photoAltBefore', { type: leakName(t, j.leak_type, j.is_main), label: before.ai_labels ? t(`aiLabel.${before.ai_labels.top.label}`) : '—' })} />
@@ -138,7 +140,9 @@ export default function JobDetail() {
             </p>
           </section>
 
-          <a href={directionsUrl(j.lat, j.lng)} target="_blank" rel="noreferrer" className="group relative block h-36 overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
+        </div>
+        <div className="flex flex-col gap-5">
+          <a href={directionsUrl(j.lat, j.lng)} target="_blank" rel="noreferrer" className="group relative block h-36 lg:h-64 overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-3 focus-visible:outline-focus">
             <Suspense fallback={<Skeleton className="h-full w-full" />}>
               <MiniMap lat={j.lat} lng={j.lng} />
             </Suspense>
@@ -169,8 +173,10 @@ export default function JobDetail() {
               </div>
             </div>
           )}
-          <FollowUpDialog id={id} open={followUp} onClose={() => setFollowUp(false)} />
-        </>
+          {actions && <div className="hidden flex-col gap-2 border-t border-surface-line pt-5 lg:flex">{actions}</div>}
+        </div>
+        <FollowUpDialog id={id} open={followUp} onClose={() => setFollowUp(false)} />
+        </div>
       )}
     </CitizenShell>
   );

@@ -42,7 +42,7 @@ function JobList() {
   const date = new Date().toLocaleDateString(i18n.language === 'sw' ? 'sw-KE' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <CitizenShell menu="technician" homeTo="/tech">
+    <CitizenShell menu="technician" homeTo="/tech" width="wide">
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className="text-sm font-bold uppercase tracking-wider text-brand-700">{date}</p>
@@ -59,7 +59,7 @@ function JobList() {
 
       {!showDone && open.length > 0 && (
         <a href={routeUrl(open)} target="_blank" rel="noreferrer"
-          className="flex min-h-[72px] items-center gap-4 rounded-xl bg-brand-600 px-5 text-white shadow-sm hover:bg-brand-700 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus">
+          className="flex min-h-[72px] lg:max-w-xl items-center gap-4 rounded-xl bg-brand-600 px-5 text-white shadow-sm hover:bg-brand-700 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus">
           <IconNavigation size={22} />
           <span className="flex flex-1 flex-col">
             <span className="font-semibold">{t('tech.startRoute')}</span>
@@ -78,7 +78,7 @@ function JobList() {
         <EmptyState title={showDone ? t('tech.noneDone') : t('tech.emptyTitle')} body={showDone ? undefined : t('tech.emptyBody')} icon={<IconCheck size={36} />} />
       )}
 
-      <ol className="flex flex-col gap-3">
+      <ol className="grid gap-3 lg:grid-cols-2 lg:gap-4">
         {jobs.map((j, i) => {
           const away = me ? haversineM(me, j) : null;
           return (

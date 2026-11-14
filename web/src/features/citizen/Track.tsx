@@ -125,7 +125,7 @@ function ReportStatus({ refCode }: { refCode: string }) {
   const s = q.data;
   const leakName = s ? t(`leakType.${s.leak_type ?? 'unknown'}`) : '';
   return (
-    <CitizenShell title={t('track.title')} back={{ to: '/track', label: t('app.back') }}>
+    <CitizenShell title={t('track.title')} back={{ to: '/track', label: t('app.back') }} width="wide">
       {q.isLoading && (
         <div className="flex flex-col gap-4" role="status" aria-label={t('track.loading')}>
           <Skeleton className="aspect-[16/9] w-full rounded-xl" />
@@ -139,7 +139,8 @@ function ReportStatus({ refCode }: { refCode: string }) {
           <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} />
         ))}
       {s && (
-        <>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start lg:gap-12">
+        <div className="flex flex-col gap-5">
           <Photos photos={s.photos} alt={(kind) => t(kind === 'after' ? 'track.photoAltAfter' : 'track.photoAltBefore', { type: leakName })} />
 
           <section className="flex flex-col gap-2">
@@ -166,6 +167,8 @@ function ReportStatus({ refCode }: { refCode: string }) {
             </div>
           )}
 
+        </div>
+        <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-surface-line lg:p-6">
           <section aria-labelledby="progress-title" className="flex flex-col gap-4">
             <div>
               <h2 id="progress-title" className="text-xl font-normal text-ink-heading">{t('track.progress')}</h2>
@@ -184,7 +187,8 @@ function ReportStatus({ refCode }: { refCode: string }) {
               {t('track.refresh')}
             </Button>
           </div>
-        </>
+        </div>
+        </div>
       )}
     </CitizenShell>
   );

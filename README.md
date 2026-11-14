@@ -130,11 +130,12 @@ e2e/                Playwright + axe
 
 ### Citizen app layout
 
-Every citizen screen uses one phone-shaped layout (`CitizenShell`).
-- **Phones:** full screen. The page scrolls normally and the main action stays pinned at the bottom.
-- **Tablets and desktops:** the same layout sits in a centred, rounded "phone" frame that scrolls inside, so it looks the same everywhere.
-
-The header has the logo (or a back arrow), a title on inner pages, and a **⋯** menu. The menu holds Track a report, My reports, the language switch (English / Kiswahili), Install the app (when the browser offers it), and staff sign-in.
+Every citizen and technician screen uses one layout (`CitizenShell`) that fills the window at every size.
+- **Header:** full width, with the logo (or a back arrow), a title on inner pages, and a **⋯** menu. The citizen menu has Track a report, My reports, language, Install the app and staff sign-in; the technician menu has My jobs, Finished jobs, language and sign out.
+- **Phones:** the main action stays pinned at the bottom of the screen.
+- **Large screens:**
+  - Home, report status, the job list and job details switch to two columns, and the main action moves inline.
+  - Single-task forms (photo, location, details, sign in, mark fixed) stay in a readable centred column, with the action bar along the bottom.
 
 The end-to-end suite checks a 360 px phone: no sideways scrolling, the main button visible without scrolling, and touch targets at least 44 px.
 

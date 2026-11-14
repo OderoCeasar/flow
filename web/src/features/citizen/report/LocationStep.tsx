@@ -107,7 +107,8 @@ export default function LocationStep() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-4 px-5 pt-6">
+      <div className="mx-auto w-full max-w-2xl lg:pt-4">
+      <div className="flex flex-col gap-4 px-5 pt-6 lg:px-8">
         <ProgressSteps step={2} total={3} labels={steps} />
         <h1 className="sr-only">{t('report.location.title')}</h1>
         <div aria-live="polite">
@@ -135,7 +136,7 @@ export default function LocationStep() {
         </div>
       </div>
 
-      <div className="relative mt-4 h-[clamp(220px,36dvh,340px)] sm:h-[380px]">
+      <div className="relative mt-4 h-[clamp(220px,36dvh,340px)] sm:mx-5 sm:h-[420px] sm:overflow-hidden sm:rounded-xl lg:mx-8">
         <Suspense fallback={<Skeleton className="h-full w-full rounded-none" />}>
           <LocationPicker
             bleed
@@ -161,7 +162,7 @@ export default function LocationStep() {
         </button>
       </div>
 
-      <div className="relative z-[1000] mx-4 -mt-6 flex items-start gap-3 rounded-xl border border-surface-line bg-surface p-4 shadow-md">
+      <div className="relative z-[1000] mx-4 -mt-6 flex items-start gap-3 sm:mx-9 lg:mx-12 rounded-xl border border-surface-line bg-surface p-4 shadow-md">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
           <IconPin size={22} />
         </span>
@@ -178,7 +179,7 @@ export default function LocationStep() {
         </div>
       </div>
 
-      <div className="px-5 pb-6 pt-4">
+      <div className="px-5 pb-6 pt-4 lg:px-8">
         {showLandmark ? (
           <Field label={t('report.location.landmark')} hint={t('report.location.landmarkHint')} optional>
             {({ id, describedBy }) => (
@@ -192,6 +193,7 @@ export default function LocationStep() {
             + {t('report.location.addLandmark')}
           </button>
         )}
+      </div>
       </div>
     </CitizenShell>
   );
