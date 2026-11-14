@@ -1,0 +1,16 @@
+# Local environment files (secrets) — keep on local machines only
+app.env
+app.local.env
+
+/flow-api
+/flow-worker
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.vite/
+.idea/
+.vscode/
+.DS_Store
+.claude/

@@ -1,0 +1,95 @@
+name: flow
+
+x-app-env: &app-env
+  ENVIRONMENT: local
+  ALLOWED_ORIGINS: http://localhost:8080,http://localhost:5173
+  DB_SOURCE: postgresql://flow:flow@db:5432/flow?sslmode=disable
+  MIGRATION_URL: file://db/migrations
+  HTTP_SERVER_ADDRESS: 0.0.0.0:8081
+  COOKIE_SECURE: "false"
+  DEV_OTP_ECHO: "true"
+  S3_ENDPOINT: minio:9000
+  # Browsers load photos through nginx on the web origin (see web/nginx.conf).
+  # To test from a phone on your network, set PUBLIC_HOST to this machine's address.
+  S3_PUBLIC_ENDPOINT: ${PUBLIC_HOST:-localhost}:8080
+  S3_ACCESS_KEY: flowminio
+  S3_SECRET_KEY: flowminio-secret
+  S3_BUCKET: flow-photos
+  SMS_PROVIDER: ${SMS_PROVIDER:-console}
+  AFRICASTALKING_USERNAME: ${AFRICASTALKING_USERNAME:-sandbox}
+  SMS_SENDER_API_KEY: ${SMS_SENDER_API_KEY:-}
+  AI_IMAGE_CLASSIFIER: ${AI_IMAGE_CLASSIFIER:-stub}
+  AI_TEXT_CLASSIFIER: ${AI_TEXT_CLASSIFIER:-keyword}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  SEED_DEMO: "true"
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: flow
+      POSTGRES_PASSWORD: flow
+      POSTGRES_DB: flow
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flow -d flow"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    # MinIO no longer publishes community images to Docker Hub; Bitnami's
+    # legacy build is the same server. Use managed S3 (or your own MinIO) in production.
+    image: bitnamilegacy/minio:2025.7.23
+    environment:
+      MINIO_ROOT_USER: flowminio
+      MINIO_ROOT_PASSWORD: flowminio-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/bitnami/minio/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/minio/health/live"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: .
+    environment: *app-env
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/healthz"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  worker:
+    build: .
+    command: ["./flow-worker"]
+    environment: *app-env
+    depends_on:
+      api:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  miniodata:

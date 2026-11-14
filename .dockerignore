@@ -1,0 +1,7 @@
+.git
+web
+e2e
+app.env
+*.log
+flow-api
+flow-worker
