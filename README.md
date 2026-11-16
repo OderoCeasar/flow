@@ -242,49 +242,6 @@ Scores are recalculated when a report changes and every hour (`RESCORE_INTERVAL`
 
 ---
 
-## How each UI/UX principle shows up
-
-1. **Make the main task short.** Reporting is three screens: photo → location → details. The location card fills in the street address from the pin. Only a photo *or* a description, plus a location, is required. Leak type, size, duration, landmark and phone are all marked optional. GPS fills the location, and a phone number is prefilled for signed-in citizens. The "Report a leak" button is pinned at the bottom of the home screen, and the report flow is fetched in the background while the home page is open.
-2. **One thing at a time.** Each step is its own screen with "Step 2 of 3" and a progress bar. On the dashboard, the four most-used filters are visible and the rest sit behind **More filters**. Override forms and reasons only appear in a dialog when the dispatcher chooses to change something.
-3. **Always show what's happening.** "Preparing your photo…" while it's compressed, then the final size. "Finding your location…" with accuracy in metres. A real upload progress bar ("Uploading… 42%"). A success screen with the reference number and a status timeline. An offline banner, and "N reports waiting to send". The status page shows when it was last checked.
-4. **Prevent mistakes.**
-   - A draggable pin, which also moves with the arrow keys, plus tap-to-move to fix wrong GPS.
-   - A coverage check stops a pin outside Nairobi before sending.
-   - "Others have reported a leak near here" before submitting, with the choice to add to it.
-   - Confirmations for marking invalid, merging and splitting.
-   - **Undo** in the toast after status changes, overrides, accepting the AI, and merges. Undoing a merge splits the reports back out.
-   - Technicians are asked before marking a job fixed without an after photo.
-5. **Recognition over recall.** Leak types are picture cards (burst pipe, pooling, dripping, sewage, not sure) with one-line descriptions. Sizes use drop icons. Everything the system knows is prefilled: GPS location, signed-in phone number, and the leak type when the AI or keywords can fill it.
-6. **Fewer choices (Hick's law).** Every citizen question has 3–5 options. Dashboard filters are grouped, and the rare ones are hidden.
-7. **Big, easy targets (Fitts's law).** Every control is at least 44×44 px (the `touch` token). The main action is full-width at the bottom, in thumb reach, and respects the safe area. Choice cards are at least 64 px tall.
-8. **Clear visual order.** One primary button per screen. On the dashboard, the bold priority number and severity badge lead each row. The reference, area and age are smaller and lighter.
-9. **Consistency.** A shared component library (`web/src/components/ui`) is used everywhere: Button, badges, Field, ChoiceCards, ProgressSteps, Timeline, Dialog, Toast, and the skeleton, empty and error states. Status words and colours come from one map (`design/tokens.ts`): "Fixed" is always "Fixed", in the UI and in SMS.
-10. **Plain language.** Copy is written for someone reading quickly on a phone. Errors say what happened and what to do next ("We couldn't get your location. Drag the pin to where the leak is."). The server's error messages follow the same style, and known error codes are translated.
-11. **Accessible (WCAG 2.2 AA).**
-    - Token colours are checked for 4.5:1 contrast.
-    - Severity always shows an icon and a word, never colour alone. Map markers show the priority number.
-    - Every input has a visible label, with hints and errors linked through `aria-describedby`.
-    - The timeline uses `aria-current="step"`, and progress bars, toasts and status messages use ARIA so screen readers announce them.
-    - There's a skip link, visible focus rings, and reduced-motion support.
-    - Photos have alt text that includes the AI label.
-    - The dashboard works fully from the keyboard: J/K to move, Enter to open, A assign, V verify, M merge, Esc to close, ? for help.
-    - axe runs in every end-to-end test and fails the build on serious issues. It caught a progress bar with no name and map markers below the 24 px target size. Markers are now pointer-only shortcuts, because every report is also a full-size row in the list.
-12. **Mobile-first and built for weak connections.**
-    - Designed at Pixel 5 size first.
-    - Photos are compressed in the browser to under 500 KB.
-    - Drafts are saved on the device (IndexedDB) after every change.
-    - A failed upload goes to an outbox and is retried automatically when the phone is back online.
-    - Only the home screen is in the first download (about 105 KB gzipped of JavaScript). The map, report flow and status pages load on demand, and staff screens are never precached on citizens' phones.
-    - The service worker precaches the citizen app and keeps a small map-tile cache, plus the last known report status.
-13. **Build trust by being open.**
-    - Citizens see the full status timeline and roughly how long leaks like theirs usually take. That's the median from the last 90 days, with a sensible fallback when there's little history.
-    - The details step says plainly that the photo and exact location go to the utility, and that other photo metadata is removed. The server re-encodes every photo, so no EXIF survives.
-    - Dispatchers see why each score is what it is, can disagree (with a reason), and every override is in the report's history.
-14. **Design every state.** Lists show skeletons, not spinners. Empty states say what to do next ("Nothing matches these filters. Try clearing some."). Errors show a **Try again** button. Every action ends in a success toast or screen.
-15. **Dense but scannable for staff.** A compact table with a sticky header, aligned numeric columns and tabular figures. The map and list share one selection, and clicking either highlights the other, with the map flying to the selected report. Keyboard shortcuts cover the common actions.
-16. **Language support.** All text comes from `web/src/i18n/locales/en.json` and `sw.json`, with plurals and placeholders. A check confirms both files have the same keys and the same placeholders. The language switch is on every screen, the choice is remembered, and `<html lang>` is updated. SMS updates use the language the citizen reported in.
-
----
 
 ## Security and privacy
 
